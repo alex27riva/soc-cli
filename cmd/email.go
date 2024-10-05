@@ -147,7 +147,7 @@ func extractDMARCDKIM(authResults string) {
 // extractLinks extracts URLs from email body text or HTML
 func extractLinks(body string) {
     // Basic URL regex to find links
-    linkRegex := regexp.MustCompile(`https?://[^\s"']+`)
+    linkRegex := regexp.MustCompile(`https?://[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})(?:/[^\s"']*)?`)
     links := linkRegex.FindAllString(body, -1)
 
     if len(links) > 0 {
