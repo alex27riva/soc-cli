@@ -76,11 +76,11 @@ func extractIOCs(filePath string) {
     }
 
     // Print IOCs grouped by type
-    fmt.Println("Extracted IOCs:")
+    fmt.Println(Magenta + "Extracted IOCs:" + Reset)
 
     // Print IPs
     if len(uniqueIPs) > 0 {
-        fmt.Println("\nIP Addresses:")
+        fmt.Println(Green + "\nIP Addresses:" + Reset)
         for ip := range uniqueIPs {
             fmt.Println(ip)
         }
@@ -88,7 +88,7 @@ func extractIOCs(filePath string) {
 
     // Print URLs
     if len(uniqueURLs) > 0 {
-        fmt.Println("\nURLs:")
+        fmt.Println(Green + "\nURLs:" + Reset)
         for url := range uniqueURLs {
             fmt.Println(url)
         }
@@ -96,7 +96,7 @@ func extractIOCs(filePath string) {
 
     // Print Emails
     if len(uniqueEmails) > 0 {
-        fmt.Println("\nEmail Addresses:")
+        fmt.Println(Green + "\nEmail Addresses:" + Reset)
         for email := range uniqueEmails {
             fmt.Println(email)
         }
@@ -104,7 +104,7 @@ func extractIOCs(filePath string) {
 
     // Print SHA256 Hashes
     if len(uniqueSHA256) > 0 {
-        fmt.Println("\nSHA256 Hashes:")
+        fmt.Println(Green + "\nSHA256 Hashes:" + Reset)
         for hash := range uniqueSHA256 {
             fmt.Println(hash)
         }

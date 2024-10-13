@@ -12,12 +12,6 @@ import (
 	"os"
 )
 
-const (
-	Reset = "\033[0m"
-	Green = "\033[32m"
-	Red   = "\033[31m"
-)
-
 func computeHash(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
