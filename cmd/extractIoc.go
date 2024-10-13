@@ -1,0 +1,119 @@
+/*
+Copyright © 2024 Alessandro Riva
+
+*/
+package cmd
+
+import (
+    "bufio"
+    "fmt"
+    "log"
+    "os"
+    "regexp"
+    "github.com/spf13/cobra"
+)
+
+var extractIocCmd = &cobra.Command{
+    Use:   "extract-ioc [file]",
+    Short: "Extract Indicators of Compromise (IOCs) from a file",
+    Long:  `Extracts IOCs like URLs, IP addresses, email addresses, and file hashes from a specified text file.`,
+    Args:  cobra.ExactArgs(1),
+    Run: func(cmd *cobra.Command, args []string) {
+        filePath := args[0]
+        extractIOCs(filePath)
+    },
+}
+
+func init() {
+    rootCmd.AddCommand(extractIocCmd)
+}
+
+func extractIOCs(filePath string) {
+    file, err := os.Open(filePath)
+    if err != nil {
+        log.Fatalf("Could not open file: %v", err)
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    
+    // Define regex patterns for various IOCs
+    ipRegex := regexp.MustCompile(`\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`)
+    urlRegex := regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)`)
+    emailRegex := regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`)
+    sha256Regex := regexp.MustCompile(`\b[a-fA-F0-9]{64}\b`)
+    
+    // Maps to store unique IOCs
+    uniqueIPs := make(map[string]struct{})
+    uniqueURLs := make(map[string]struct{})
+    uniqueEmails := make(map[string]struct{})
+    uniqueSHA256 := make(map[string]struct{})
+    
+    // Scan the file line by line and extract IOCs
+    for scanner.Scan() {
+        line := scanner.Text()
+        
+        // Extract and store unique IPs
+        ips := ipRegex.FindAllString(line, -1)
+        for _, ip := range ips {
+            uniqueIPs[ip] = struct{}{}
+        }
+
+        // Extract and store unique URLs
+        urls := urlRegex.FindAllString(line, -1)
+        for _, url := range urls {
+            uniqueURLs[url] = struct{}{}
+        }
+
+        // Extract and store unique Emails
+        emails := emailRegex.FindAllString(line, -1)
+        for _, email := range emails {
+            uniqueEmails[email] = struct{}{}
+        }
+
+        // Extract and store unique SHA256 hashes
+        sha256Hashes := sha256Regex.FindAllString(line, -1)
+        for _, hash := range sha256Hashes {
+            uniqueSHA256[hash] = struct{}{}
+        }
+    }
+
+    if err := scanner.Err(); err != nil {
+        log.Fatalf("Error reading file: %v", err)
+    }
+
+    // Print IOCs grouped by type
+    fmt.Println("Extracted IOCs:")
+
+    // Print IPs
+    if len(uniqueIPs) > 0 {
+        fmt.Println("\nIP Addresses:")
+        for ip := range uniqueIPs {
+            fmt.Println(ip)
+        }
+    }
+
+    // Print URLs
+    if len(uniqueURLs) > 0 {
+        fmt.Println("\nURLs:")
+        for url := range uniqueURLs {
+            fmt.Println(url)
+        }
+    }
+
+    // Print Emails
+    if len(uniqueEmails) > 0 {
+        fmt.Println("\nEmail Addresses:")
+        for email := range uniqueEmails {
+            fmt.Println(email)
+        }
+    }
+
+    // Print SHA256 Hashes
+    if len(uniqueSHA256) > 0 {
+        fmt.Println("\nSHA256 Hashes:")
+        for hash := range uniqueSHA256 {
+            fmt.Println(hash)
+        }
+    }
+}
