@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
     "io"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // ipInfo stores information retrieved from the IP analysis API
@@ -22,10 +22,9 @@ type ipInfo struct {
 
 // analyzeIP fetches and displays IP information using the API
 func analyzeIP(ip string) {
-	// Fetch API key from environment variable
-	apiKey := os.Getenv("IPINFO_API_KEY")
+	apiKey := viper.GetString("ipinfo_api_key")
 	if apiKey == "" {
-		log.Fatal("API key is missing! Please set the IPINFO_API_KEY environment variable.")
+		log.Fatal("API key is missing! Please set the ipinfo_api_key in config.yaml file")
 	}
 
 	// Construct the request to the IP analysis API (example API URL)
