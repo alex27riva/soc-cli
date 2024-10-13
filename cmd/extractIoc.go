@@ -9,7 +9,6 @@ import (
     "fmt"
     "log"
     "os"
-    "regexp"
     "github.com/spf13/cobra"
 )
 
@@ -37,12 +36,6 @@ func extractIOCs(filePath string) {
 
     scanner := bufio.NewScanner(file)
     
-    // Define regex patterns for various IOCs
-    ipRegex := regexp.MustCompile(`\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b`)
-    urlRegex := regexp.MustCompile(`https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)`)
-    emailRegex := regexp.MustCompile(`[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`)
-    sha256Regex := regexp.MustCompile(`\b[a-fA-F0-9]{64}\b`)
-    
     // Maps to store unique IOCs
     uniqueIPs := make(map[string]struct{})
     uniqueURLs := make(map[string]struct{})
@@ -54,25 +47,25 @@ func extractIOCs(filePath string) {
         line := scanner.Text()
         
         // Extract and store unique IPs
-        ips := ipRegex.FindAllString(line, -1)
+        ips := IPRegex.FindAllString(line, -1)
         for _, ip := range ips {
             uniqueIPs[ip] = struct{}{}
         }
 
         // Extract and store unique URLs
-        urls := urlRegex.FindAllString(line, -1)
+        urls := URLRegex.FindAllString(line, -1)
         for _, url := range urls {
             uniqueURLs[url] = struct{}{}
         }
 
         // Extract and store unique Emails
-        emails := emailRegex.FindAllString(line, -1)
+        emails := EmailRegex.FindAllString(line, -1)
         for _, email := range emails {
             uniqueEmails[email] = struct{}{}
         }
 
         // Extract and store unique SHA256 hashes
-        sha256Hashes := sha256Regex.FindAllString(line, -1)
+        sha256Hashes := SHA256Regex.FindAllString(line, -1)
         for _, hash := range sha256Hashes {
             uniqueSHA256[hash] = struct{}{}
         }
