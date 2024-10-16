@@ -9,11 +9,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"io"
 	"log"
 	"net/http"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+	"os"
 )
 
 // ipInfo stores information retrieved from the IP analysis API
@@ -31,6 +32,15 @@ func analyzeIP(ip string) {
 	apiKey := viper.GetString("api_keys.ipinfo.api_key")
 	if apiKey == "" {
 		log.Fatal("API key is missing! Please set the ipinfo_api_key in config.yaml file")
+	}
+
+	// Check if is local IP address
+	if RFC1918Regex.MatchString(ip) {
+		fmt.Printf("The IP provided %s is a RFC1918 bogus IP address.\n", ip)
+		os.Exit(0)
+	} else if ip == "127.0.0.1" {
+		fmt.Printf("The IP provided %s is a loopback IP address.\n", ip)
+		os.Exit(0)
 	}
 
 	// Construct the request to the IP analysis API (example API URL)
