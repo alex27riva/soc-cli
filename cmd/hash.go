@@ -1,5 +1,8 @@
 /*
 Copyright © 2024 Alessandro Riva
+
+Licensed under the MIT License.
+See the LICENSE file for details.
 */
 package cmd
 
@@ -26,7 +29,6 @@ func computeHash(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-// hashCmd represents the hash command
 var hashCmd = &cobra.Command{
 	Use:   "hash [file]",
 	Args:  cobra.ExactArgs(1),
