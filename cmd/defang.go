@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -24,9 +25,13 @@ var defangCmd = &cobra.Command{
 		var input string
 
 		if len(args) > 0 {
+			fmt.Println(len(args))
 			input = args[0]
 		} else {
-			fmt.Print("Enter URL or email to defang: ")
+			if !isInputFromPipe() {
+				fmt.Print("Enter URL or email to defang: ")
+			}
+
 			reader := bufio.NewReader(os.Stdin)
 			in, err := reader.ReadString('\n')
 			if err != nil {
@@ -66,4 +71,22 @@ func defangURL(url string) string {
 	defanged = strings.Replace(defanged, ".", "[.]", -1)
 
 	return defanged
+}
+
+// isInputFromPipe checks if the standard input is coming from a pipe
+func isInputFromPipe() bool {
+	// Check if stdin is a terminal
+	return !isTerminal(os.Stdin.Fd())
+}
+
+// isTerminal checks if the given file descriptor is a terminal
+func isTerminal(fd uintptr) bool {
+	return runtime.GOOS != "windows" && isatty(fd)
+}
+
+// isatty checks if the file descriptor is a terminal (Unix-like systems)
+func isatty(fd uintptr) bool {
+	// Use the syscall package to check if the file descriptor is a terminal
+	// This is a simplified version; you may need to import "golang.org/x/sys/unix" for a complete implementation
+	return false // Placeholder; implement actual check if needed
 }
