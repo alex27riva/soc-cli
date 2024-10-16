@@ -18,11 +18,10 @@ import (
 )
 
 type ipInfo struct {
-	IP           string `json:"ip"`
-	Country      string `json:"country"`
-	Hostname     string `json:"hostname"`
-	Org          string `json:"org"`
-	ThreatStatus string `json:"threat"`
+	IP       string `json:"ip"`
+	Country  string `json:"country"`
+	Hostname string `json:"hostname"`
+	Org      string `json:"org"`
 }
 
 type greyNoiseInfo struct {
@@ -69,20 +68,10 @@ func fetchGreyNoiseData(ip string) (*greyNoiseInfo, error) {
 	return &greyNoiseData, nil
 }
 
-// analyzeIP fetches and displays IP information using the API
-func analyzeIP(ip string) {
+func fetchIpInfoData(ip string) (*ipInfo, error) {
 	apiKey := viper.GetString("api_keys.ipinfo.api_key")
 	if apiKey == "" {
 		log.Fatal("API key is missing! Please set the ipinfo_api_key in config.yaml file")
-	}
-
-	// Check if is local IP address
-	if RFC1918Regex.MatchString(ip) {
-		fmt.Printf("The IP provided %s is a RFC1918 bogus IP address.\n", ip)
-		os.Exit(0)
-	} else if ip == "127.0.0.1" {
-		fmt.Printf("The IP provided %s is a loopback IP address.\n", ip)
-		os.Exit(0)
 	}
 
 	// Construct the request to the IP analysis API (example API URL)
@@ -91,20 +80,44 @@ func analyzeIP(ip string) {
 	// Make the API request
 	resp, err := http.Get(apiUrl)
 	if err != nil {
-		log.Fatalf("Error making API request: %v", err)
+		return nil, fmt.Errorf("error making IPInfo API request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	// Read and parse the response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Error reading response body: %v", err)
+		return nil, fmt.Errorf("failed to read IPInfo response body: %v", err)
 	}
 
 	var info ipInfo
 	err = json.Unmarshal(body, &info)
 	if err != nil {
-		log.Fatalf("Error parsing JSON response: %v", err)
+		return nil, fmt.Errorf("failed to parse IPInfo JSON response: %v", err)
+	}
+	return &info, nil
+}
+
+func analyzeIP(ip string) {
+
+	// Validate provided IP address
+	if IPRegex.MatchString(ip) {
+		if RFC1918Regex.MatchString(ip) {
+			fmt.Printf("The IP provided %s is a RFC1918 bogus IP address.\n", ip)
+			os.Exit(0)
+		} else if ip == "127.0.0.1" {
+			fmt.Printf("The IP provided %s is a loopback IP address.\n", ip)
+			os.Exit(0)
+		}
+	} else {
+		fmt.Printf("The IP provided %s is not a valid IPv4 address.\n", ip)
+		os.Exit(1)
+	}
+
+	// Fetch IpInfo api
+	ipInfoData, err := fetchIpInfoData(ip)
+	if err != nil {
+		log.Printf("Error fetching IpInfo data: %v\n", err)
 	}
 
 	// Fetch GreyNoise threat intelligence
@@ -115,8 +128,8 @@ func analyzeIP(ip string) {
 
 	// Print the IP information
 	fmt.Println(Blue + "IP information from IPInfo" + Reset)
-	fmt.Printf("IP: %s\nHostname: %s\nOrg: %s\nCountry: %s\nThreat: %s\n",
-		info.IP, info.Hostname, info.Org, info.Country, info.ThreatStatus)
+	fmt.Printf("IP: %s\nHostname: %s\nOrg: %s\nCountry: %s\n",
+		ipInfoData.IP, ipInfoData.Hostname, ipInfoData.Org, ipInfoData.Country)
 
 	if greyNoiseData != nil {
 		fmt.Println(Blue + "\nGreyNoise Threat Intelligence:" + Reset)
