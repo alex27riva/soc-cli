@@ -13,7 +13,6 @@ import (
     "github.com/spf13/cobra"
 )
 
-// defangCmd represents the defang command
 var defangCmd = &cobra.Command{
     Use:   "defang [input]",
     Short: "Defang a URL or email address to make it safe for sharing",

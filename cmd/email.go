@@ -17,7 +17,6 @@ import (
     "github.com/spf13/cobra"
 )
 
-// analyzeEmailCmd represents the analyze-email command
 var analyzeEmailCmd = &cobra.Command{
     Use:   "email [file]",
     Short: "Analyze an email in .eml format for attachments and links",

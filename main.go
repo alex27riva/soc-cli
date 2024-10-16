@@ -31,6 +31,7 @@ func ensureConfigExists() error {
 		}
 	}
 
+	// Create file with default config if doesn't exist
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		defaultConfig := []byte("# urlscan_api_key: your-urlscan-api-key\n")
 		if err := os.WriteFile(configFile, defaultConfig, 0644); err != nil {
