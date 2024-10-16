@@ -68,8 +68,11 @@ func extractIOCs(filePath string, asJSON bool) {
 		fmt.Println(string(jsonData))
 	} else {
 
-		// Print IOCs grouped by type
-		fmt.Println(Magenta + "Extracted IOCs:" + Reset)
+		if len(uniqueIPs)+len(uniqueURLs)+len(uniqueEmails)+len(uniqueHashes) > 0 {
+			fmt.Println(Blue + "Extracted IOCs" + Reset)
+		} else {
+			fmt.Println(Blue + "No IOCs found" + Reset)
+		}
 
 		// Print IPs
 		if len(uniqueIPs) > 0 {
