@@ -17,15 +17,58 @@ import (
 	"os"
 )
 
-// ipInfo stores information retrieved from the IP analysis API
 type ipInfo struct {
 	IP           string `json:"ip"`
 	Country      string `json:"country"`
 	Hostname     string `json:"hostname"`
 	Org          string `json:"org"`
 	ThreatStatus string `json:"threat"`
-	// Add more fields as needed based on the API response
 }
+
+type greyNoiseInfo struct {
+    IP         string `json:"ip"`
+    Noise      bool   `json:"noise"`
+    Riot       bool   `json:"riot"`
+    Classification string `json:"classification"`
+    Name       string `json:"name"`
+    Link       string `json:"link"`
+}
+
+// fetchGreyNoiseData retrieves threat intelligence information from GreyNoise API
+func fetchGreyNoiseData(ip string) (*greyNoiseInfo, error) {
+    apiKey := viper.GetString("api_keys.greynoise.api_key")
+    if apiKey == "" {
+        log.Fatal("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
+    }
+
+    apiUrl := fmt.Sprintf("https://api.greynoise.io/v3/community/%s", ip)
+    req, err := http.NewRequest("GET", apiUrl, nil)
+    if err != nil {
+        return nil, fmt.Errorf("failed to create GreyNoise API request: %v", err)
+    }
+    req.Header.Set("key", apiKey)
+
+    client := &http.Client{}
+    resp, err := client.Do(req)
+    if err != nil {
+        return nil, fmt.Errorf("failed to make GreyNoise API request: %v", err)
+    }
+    defer resp.Body.Close()
+
+    body, err := io.ReadAll(resp.Body)
+    if err != nil {
+        return nil, fmt.Errorf("failed to read GreyNoise response body: %v", err)
+    }
+
+    var greyNoiseData greyNoiseInfo
+    err = json.Unmarshal(body, &greyNoiseData)
+    if err != nil {
+        return nil, fmt.Errorf("failed to parse GreyNoise JSON response: %v", err)
+    }
+
+    return &greyNoiseData, nil
+}
+
 
 // analyzeIP fetches and displays IP information using the API
 func analyzeIP(ip string) {
@@ -65,9 +108,28 @@ func analyzeIP(ip string) {
 		log.Fatalf("Error parsing JSON response: %v", err)
 	}
 
+	// Fetch GreyNoise threat intelligence
+	greyNoiseData, err := fetchGreyNoiseData(ip)
+	if err != nil {
+		log.Printf("Error fetching GreyNoise data: %v\n", err)
+	}
+
 	// Print the IP information
+	fmt.Println(Blue + "IP information from IPInfo" + Reset)
 	fmt.Printf("IP: %s\nHostname: %s\nOrg: %s\nCountry: %s\nThreat: %s\n",
 		info.IP, info.Hostname, info.Org, info.Country, info.ThreatStatus)
+
+	if greyNoiseData != nil {
+		fmt.Println(Blue + "\nGreyNoise Threat Intelligence:" + Reset)
+
+		classification := greyNoiseData.Classification
+        if classification == "malicious" {
+            classification = fmt.Sprintf("%s%s%s", Red, classification, Reset)
+        }
+
+		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",
+			greyNoiseData.Noise, greyNoiseData.Riot, classification, greyNoiseData.Name, greyNoiseData.Link)
+	}
 }
 
 // ipCmd represents the IP analysis command
