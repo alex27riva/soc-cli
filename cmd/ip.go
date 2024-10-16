@@ -26,49 +26,48 @@ type ipInfo struct {
 }
 
 type greyNoiseInfo struct {
-    IP         string `json:"ip"`
-    Noise      bool   `json:"noise"`
-    Riot       bool   `json:"riot"`
-    Classification string `json:"classification"`
-    Name       string `json:"name"`
-    Link       string `json:"link"`
+	IP             string `json:"ip"`
+	Noise          bool   `json:"noise"`
+	Riot           bool   `json:"riot"`
+	Classification string `json:"classification"`
+	Name           string `json:"name"`
+	Link           string `json:"link"`
 }
 
-// fetchGreyNoiseData retrieves threat intelligence information from GreyNoise API
+// Get threat intelligence from GreyNoise API
 func fetchGreyNoiseData(ip string) (*greyNoiseInfo, error) {
-    apiKey := viper.GetString("api_keys.greynoise.api_key")
-    if apiKey == "" {
-        log.Fatal("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
-    }
+	apiKey := viper.GetString("api_keys.greynoise.api_key")
+	if apiKey == "" {
+		log.Fatal("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
+	}
 
-    apiUrl := fmt.Sprintf("https://api.greynoise.io/v3/community/%s", ip)
-    req, err := http.NewRequest("GET", apiUrl, nil)
-    if err != nil {
-        return nil, fmt.Errorf("failed to create GreyNoise API request: %v", err)
-    }
-    req.Header.Set("key", apiKey)
+	apiUrl := fmt.Sprintf("https://api.greynoise.io/v3/community/%s", ip)
+	req, err := http.NewRequest("GET", apiUrl, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create GreyNoise API request: %v", err)
+	}
+	req.Header.Set("key", apiKey)
 
-    client := &http.Client{}
-    resp, err := client.Do(req)
-    if err != nil {
-        return nil, fmt.Errorf("failed to make GreyNoise API request: %v", err)
-    }
-    defer resp.Body.Close()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make GreyNoise API request: %v", err)
+	}
+	defer resp.Body.Close()
 
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, fmt.Errorf("failed to read GreyNoise response body: %v", err)
-    }
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read GreyNoise response body: %v", err)
+	}
 
-    var greyNoiseData greyNoiseInfo
-    err = json.Unmarshal(body, &greyNoiseData)
-    if err != nil {
-        return nil, fmt.Errorf("failed to parse GreyNoise JSON response: %v", err)
-    }
+	var greyNoiseData greyNoiseInfo
+	err = json.Unmarshal(body, &greyNoiseData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse GreyNoise JSON response: %v", err)
+	}
 
-    return &greyNoiseData, nil
+	return &greyNoiseData, nil
 }
-
 
 // analyzeIP fetches and displays IP information using the API
 func analyzeIP(ip string) {
@@ -123,16 +122,15 @@ func analyzeIP(ip string) {
 		fmt.Println(Blue + "\nGreyNoise Threat Intelligence:" + Reset)
 
 		classification := greyNoiseData.Classification
-        if classification == "malicious" {
-            classification = fmt.Sprintf("%s%s%s", Red, classification, Reset)
-        }
+		if classification == "malicious" {
+			classification = fmt.Sprintf("%s%s%s", Red, classification, Reset)
+		}
 
 		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",
 			greyNoiseData.Noise, greyNoiseData.Riot, classification, greyNoiseData.Name, greyNoiseData.Link)
 	}
 }
 
-// ipCmd represents the IP analysis command
 var ipCmd = &cobra.Command{
 	Use:   "ip [ipv4]",
 	Short: "Analyze an IP address for geolocation, ASN, and threat status",
