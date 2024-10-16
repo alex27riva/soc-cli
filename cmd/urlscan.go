@@ -31,7 +31,7 @@ type urlScanResult struct {
 
 // submitURLScan submits a URL for scanning
 func submitURLScan(url string) (string, error) {
-	apiKey := viper.GetString("urlscan_api_key")
+	apiKey := viper.GetString("api_keys.urlscan.api_key")
 	if apiKey == "" {
 		return "", fmt.Errorf("API key is missing! Please set the urlscan_api_key in config.yaml file")
 	}

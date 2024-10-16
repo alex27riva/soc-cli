@@ -9,9 +9,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-    "io"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,7 +28,7 @@ type ipInfo struct {
 
 // analyzeIP fetches and displays IP information using the API
 func analyzeIP(ip string) {
-	apiKey := viper.GetString("ipinfo_api_key")
+	apiKey := viper.GetString("api_keys.ipinfo.api_key")
 	if apiKey == "" {
 		log.Fatal("API key is missing! Please set the ipinfo_api_key in config.yaml file")
 	}

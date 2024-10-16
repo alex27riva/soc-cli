@@ -15,6 +15,14 @@ import (
 	"soc-cli/cmd"
 )
 
+const configTemplate = `api_keys:
+  urlscan:
+    api_key: your-urlscan-api-key
+
+  ipinfo:
+    api_key: your-ipinfo-api-key
+`
+
 func ensureConfigExists() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -33,7 +41,7 @@ func ensureConfigExists() error {
 
 	// Create file with default config if doesn't exist
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		defaultConfig := []byte("# urlscan_api_key: your-urlscan-api-key\n")
+		defaultConfig := []byte(configTemplate)
 		if err := os.WriteFile(configFile, defaultConfig, 0644); err != nil {
 			return fmt.Errorf("could not create config file: %v", err)
 		}

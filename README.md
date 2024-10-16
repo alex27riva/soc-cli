@@ -43,10 +43,13 @@ On Windows the path is `%USERPROFILE%/.config/soc-cli/config.yaml`
 Example structure:
 
 ```yaml
-ipstack_api_key: your_ipstack_api_key
-shodan_api_key: your_shodan_api_key
-virustotal_api_key: your_virustotal_api_key
-urlscan_api_key: your_urlscan_api_key
+api_keys:
+  urlscan:
+    api_key: your-urlscan-api-key
+
+  ipinfo:
+    api_key: your-ipinfo-api-key
+
 ```
 
 ## Usage
