@@ -7,12 +7,19 @@ See the LICENSE file for details.
 package cmd
 
 import (
-    "bufio"
+    "encoding/json"
     "fmt"
+    "io/ioutil"
     "log"
-    "os"
     "github.com/spf13/cobra"
 )
+
+type iocOutput struct {
+	URLs       []string `json:"urls"`
+	IPs        []string `json:"ips"`
+	Emails     []string `json:"emails"`
+	Hashes     []string `json:"hashes"`
+}
 
 var extractIocCmd = &cobra.Command{
     Use:   "extract-ioc [file]",
@@ -21,61 +28,49 @@ var extractIocCmd = &cobra.Command{
     Args:  cobra.ExactArgs(1),
     Run: func(cmd *cobra.Command, args []string) {
         filePath := args[0]
-        extractIOCs(filePath)
+        asJSON, _ := cmd.Flags().GetBool("json")
+		extractIOCs(filePath, asJSON)
     },
 }
 
 func init() {
+    extractIocCmd.Flags().Bool("json", false, "Output IOCs in JSON format")
     rootCmd.AddCommand(extractIocCmd)
 }
 
-func extractIOCs(filePath string) {
-    file, err := os.Open(filePath)
-    if err != nil {
-        log.Fatalf("Could not open file: %v", err)
-    }
-    defer file.Close()
+func extractIOCs(filePath string, asJSON bool) {
 
-    scanner := bufio.NewScanner(file)
+
+    data, err := ioutil.ReadFile(filePath)
+	if err != nil {
+		log.Fatalf("Error reading file: %v", err)
+	}
+
+    //scanner := bufio.NewScanner(file)
     
-    // Maps to store unique IOCs
-    uniqueIPs := make(map[string]struct{})
-    uniqueURLs := make(map[string]struct{})
-    uniqueEmails := make(map[string]struct{})
-    uniqueSHA256 := make(map[string]struct{})
+	// Find all IOCs
+	uniqueURLs := removeDuplicates(URLRegex.FindAllString(string(data), -1))
+	uniqueIPs := removeDuplicates(IPRegex.FindAllString(string(data), -1))
+	uniqueEmails := removeDuplicates(EmailRegex.FindAllString(string(data), -1))
+	uniqueHashes := removeDuplicates(SHA256Regex.FindAllString(string(data), -1))
+
+    if asJSON {
+		// Prepare data for JSON output
+		iocData := iocOutput{
+			URLs:   uniqueURLs,
+			IPs:    uniqueIPs,
+			Emails: uniqueEmails,
+			Hashes: uniqueHashes,
+		}
+
+        // Marshal to JSON and print
+		jsonData, err := json.MarshalIndent(iocData, "", "  ")
+		if err != nil {
+			log.Fatalf("Error marshalling JSON: %v", err)
+		}
+		fmt.Println(string(jsonData))
+        } else {
     
-    // Scan the file line by line and extract IOCs
-    for scanner.Scan() {
-        line := scanner.Text()
-        
-        // Extract and store unique IPs
-        ips := IPRegex.FindAllString(line, -1)
-        for _, ip := range ips {
-            uniqueIPs[ip] = struct{}{}
-        }
-
-        // Extract and store unique URLs
-        urls := URLRegex.FindAllString(line, -1)
-        for _, url := range urls {
-            uniqueURLs[url] = struct{}{}
-        }
-
-        // Extract and store unique Emails
-        emails := EmailRegex.FindAllString(line, -1)
-        for _, email := range emails {
-            uniqueEmails[email] = struct{}{}
-        }
-
-        // Extract and store unique SHA256 hashes
-        sha256Hashes := SHA256Regex.FindAllString(line, -1)
-        for _, hash := range sha256Hashes {
-            uniqueSHA256[hash] = struct{}{}
-        }
-    }
-
-    if err := scanner.Err(); err != nil {
-        log.Fatalf("Error reading file: %v", err)
-    }
 
     // Print IOCs grouped by type
     fmt.Println(Magenta + "Extracted IOCs:" + Reset)
@@ -83,7 +78,7 @@ func extractIOCs(filePath string) {
     // Print IPs
     if len(uniqueIPs) > 0 {
         fmt.Println(Green + "\nIP Addresses:" + Reset)
-        for ip := range uniqueIPs {
+        for _, ip := range uniqueIPs {
             fmt.Println(ip)
         }
     }
@@ -91,7 +86,7 @@ func extractIOCs(filePath string) {
     // Print URLs
     if len(uniqueURLs) > 0 {
         fmt.Println(Green + "\nURLs:" + Reset)
-        for url := range uniqueURLs {
+        for _, url := range uniqueURLs {
             fmt.Println(url)
         }
     }
@@ -99,16 +94,30 @@ func extractIOCs(filePath string) {
     // Print Emails
     if len(uniqueEmails) > 0 {
         fmt.Println(Green + "\nEmail Addresses:" + Reset)
-        for email := range uniqueEmails {
+        for _, email := range uniqueEmails {
             fmt.Println(email)
         }
     }
 
     // Print SHA256 Hashes
-    if len(uniqueSHA256) > 0 {
+    if len(uniqueHashes) > 0 {
         fmt.Println(Green + "\nSHA256 Hashes:" + Reset)
-        for hash := range uniqueSHA256 {
+        for _, hash := range uniqueHashes {
             fmt.Println(hash)
         }
     }
+}
+}
+
+// Helper function to remove duplicate IOCs
+func removeDuplicates(items []string) []string {
+	uniqueItems := make(map[string]bool)
+	result := []string{}
+	for _, item := range items {
+		if !uniqueItems[item] {
+			uniqueItems[item] = true
+			result = append(result, item)
+		}
+	}
+	return result
 }
