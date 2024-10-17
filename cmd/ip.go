@@ -7,11 +7,8 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -64,86 +61,52 @@ type abuseIPDBResponse struct {
 }
 
 // Get threat intelligence from GreyNoise API
-func getGreyNoiseData(ip string, apiKey string) (*greyNoiseInfo, error) {
+func getGreyNoiseData(ip string, apiKey string) *greyNoiseInfo {
 	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip)
-	req, err := http.NewRequest("GET", apiUrl, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create GreyNoise API request: %v", err)
-	}
-	req.Header.Set("key", apiKey)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make GreyNoise API request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read GreyNoise response body: %v", err)
+	headers := map[string]string{
+		"key": apiKey,
 	}
 
 	var greyNoiseData greyNoiseInfo
-	err = json.Unmarshal(body, &greyNoiseData)
+
+	err := MakeAPIRequest(apiUrl, headers, &greyNoiseData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse GreyNoise JSON response: %v", err)
+		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}
 
-	return &greyNoiseData, nil
+	return &greyNoiseData
 }
 
-func getIPInfo(ip string, apiKey string) (*ipInfo, error) {
+func getIPInfo(ip string, apiKey string) *ipInfo {
 	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip, apiKey)
-	// Make the API request
-	resp, err := http.Get(apiUrl)
-	if err != nil {
-		return nil, fmt.Errorf("error making IPInfo API request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Read and parse the response
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read IPInfo response body: %v", err)
-	}
 
 	var info ipInfo
-	err = json.Unmarshal(body, &info)
+
+	err := MakeAPIRequest(apiUrl, nil, &info)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse IPInfo JSON response: %v", err)
+		log.Fatalf("Error fetching IP info: %v", err)
 	}
-	return &info, nil
+
+	return &info
 }
 
 // getAbuseIPDBInfo fetches data from AbuseIPDB for a specific IP address
 func getAbuseIPDBInfo(ip string, apiKey string) *abuseIPDBResponse {
 	apiUrl := fmt.Sprintf(abuseAPIURL, ip)
-	req, err := http.NewRequest("GET", apiUrl, nil)
-	if err != nil {
-		log.Fatalf("Error creating request to AbuseIPDB: %v", err)
-	}
 
-	req.Header.Set("Key", apiKey)
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatalf("Error making AbuseIPDB API request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Error reading AbuseIPDB response body: %v", err)
+	headers := map[string]string{
+		"Key":    apiKey,
+		"Accept": "application/json",
 	}
 
 	var data abuseIPDBResponse
-	err = json.Unmarshal(body, &data)
+
+	err := MakeAPIRequest(apiUrl, headers, &data)
 	if err != nil {
-		log.Fatalf("Error parsing AbuseIPDB JSON response: %v", err)
+		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}
+
 	return &data
 }
 
@@ -178,16 +141,10 @@ func analyzeIP(ip string) {
 	}
 
 	// Fetch IpInfo api
-	ipInfoData, err := getIPInfo(ip, ipInfoApiKey)
-	if err != nil {
-		log.Printf("Error fetching IpInfo data: %v\n", err)
-	}
+	ipInfoData := getIPInfo(ip, ipInfoApiKey)
 
 	// Fetch GreyNoise threat intelligence
-	greyNoiseData, err := getGreyNoiseData(ip, greyNoiseApiKey)
-	if err != nil {
-		log.Printf("Error fetching GreyNoise data: %v\n", err)
-	}
+	greyNoiseData := getGreyNoiseData(ip, greyNoiseApiKey)
 
 	abuseIPDBData := getAbuseIPDBInfo(ip, abuseIPDBApiKey)
 
