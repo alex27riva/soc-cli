@@ -132,11 +132,13 @@ func analyzeIP(ip string) {
 		ipInfoData.IP, ipInfoData.Hostname, ipInfoData.Org, ipInfoData.Country)
 
 	if greyNoiseData != nil {
-		fmt.Println(Blue + "\nGreyNoise Threat Intelligence:" + Reset)
+		fmt.Println(Blue + "\nGreyNoise Threat Intelligence" + Reset)
 
 		classification := greyNoiseData.Classification
 		if classification == "malicious" {
 			classification = fmt.Sprintf("%s%s%s", Red, classification, Reset)
+		} else if classification == "benign" {
+			classification = fmt.Sprintf("%s%s%s", Green, classification, Reset)
 		}
 
 		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",

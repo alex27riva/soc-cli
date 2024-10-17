@@ -59,7 +59,7 @@ func calculateSha256(file *os.File) string {
 var hashCmd = &cobra.Command{
 	Use:   "hash [file]",
 	Args:  cobra.ExactArgs(1),
-	Short: "Calculate the SHA-256 hash of a file",
+	Short: "Calculate file hashes",
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := args[0]
 
