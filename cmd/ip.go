@@ -17,6 +17,11 @@ import (
 	"os"
 )
 
+const (
+	greyNoiseAPIURL = "https://api.greynoise.io/v3/community/%s"
+	ipInfoAPIURL    = "https://ipinfo.io/%s?token=%s"
+)
+
 type ipInfo struct {
 	IP       string `json:"ip"`
 	Country  string `json:"country"`
@@ -34,13 +39,8 @@ type greyNoiseInfo struct {
 }
 
 // Get threat intelligence from GreyNoise API
-func fetchGreyNoiseData(ip string) (*greyNoiseInfo, error) {
-	apiKey := viper.GetString("api_keys.greynoise.api_key")
-	if apiKey == "" {
-		log.Fatal("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
-	}
-
-	apiUrl := fmt.Sprintf("https://api.greynoise.io/v3/community/%s", ip)
+func fetchGreyNoiseData(ip string, apiKey string) (*greyNoiseInfo, error) {
+	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip)
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create GreyNoise API request: %v", err)
@@ -68,15 +68,8 @@ func fetchGreyNoiseData(ip string) (*greyNoiseInfo, error) {
 	return &greyNoiseData, nil
 }
 
-func fetchIpInfoData(ip string) (*ipInfo, error) {
-	apiKey := viper.GetString("api_keys.ipinfo.api_key")
-	if apiKey == "" {
-		log.Fatal("API key is missing! Please set the ipinfo_api_key in config.yaml file")
-	}
-
-	// Construct the request to the IP analysis API (example API URL)
-	apiUrl := fmt.Sprintf("https://ipinfo.io/%s?token=%s", ip, apiKey)
-
+func fetchIpInfoData(ip string, apiKey string) (*ipInfo, error) {
+	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip, apiKey)
 	// Make the API request
 	resp, err := http.Get(apiUrl)
 	if err != nil {
@@ -110,18 +103,27 @@ func analyzeIP(ip string) {
 			os.Exit(0)
 		}
 	} else {
-		fmt.Printf("The IP provided %s is not a valid IPv4 address.\n", ip)
-		os.Exit(1)
+		log.Fatalf("The IP provided %s is not a valid IPv4 address.\n", ip)
+	}
+
+	greyNoiseApiKey := viper.GetString("api_keys.greynoise.api_key")
+	if greyNoiseApiKey == "" {
+		log.Println("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
+	}
+
+	ipInfoApiKey := viper.GetString("api_keys.ipinfo.api_key")
+	if ipInfoApiKey == "" {
+		log.Println("API key is missing! Please set the ipinfo_api_key in config.yaml file")
 	}
 
 	// Fetch IpInfo api
-	ipInfoData, err := fetchIpInfoData(ip)
+	ipInfoData, err := fetchIpInfoData(ip, ipInfoApiKey)
 	if err != nil {
 		log.Printf("Error fetching IpInfo data: %v\n", err)
 	}
 
 	// Fetch GreyNoise threat intelligence
-	greyNoiseData, err := fetchGreyNoiseData(ip)
+	greyNoiseData, err := fetchGreyNoiseData(ip, greyNoiseApiKey)
 	if err != nil {
 		log.Printf("Error fetching GreyNoise data: %v\n", err)
 	}
