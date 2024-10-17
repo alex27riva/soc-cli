@@ -9,17 +9,19 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"io"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
 	greyNoiseAPIURL = "https://api.greynoise.io/v3/community/%s"
 	ipInfoAPIURL    = "https://ipinfo.io/%s?token=%s"
+	abuseAPIURL     = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90"
 )
 
 type ipInfo struct {
@@ -38,8 +40,31 @@ type greyNoiseInfo struct {
 	Link           string `json:"link"`
 }
 
+type abuseIPDBResponse struct {
+	Data struct {
+		IPAddress            string   `json:"ipAddress"`
+		IsPublic             bool     `json:"isPublic"`
+		IPVersion            int      `json:"ipVersion"`
+		IsWhitelisted        bool     `json:"isWhitelisted"`
+		AbuseConfidenceScore int      `json:"abuseConfidenceScore"`
+		CountryCode          string   `json:"countryCode"`
+		UsageType            string   `json:"usageType"`
+		ISP                  string   `json:"isp"`
+		Domain               string   `json:"domain"`
+		Hostnames            []string `json:"hostnames"`
+		TotalReports         int      `json:"totalReports"`
+		LastReportedAt       string   `json:"lastReportedAt"`
+		Reports              []struct {
+			ReporterID      int    `json:"reporterId"`
+			ReporterCountry string `json:"reporterCountry"`
+			ReportedAt      string `json:"reportedAt"`
+			Comment         string `json:"comment"`
+		} `json:"reports"`
+	} `json:"data"`
+}
+
 // Get threat intelligence from GreyNoise API
-func fetchGreyNoiseData(ip string, apiKey string) (*greyNoiseInfo, error) {
+func getGreyNoiseData(ip string, apiKey string) (*greyNoiseInfo, error) {
 	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip)
 	req, err := http.NewRequest("GET", apiUrl, nil)
 	if err != nil {
@@ -68,7 +93,7 @@ func fetchGreyNoiseData(ip string, apiKey string) (*greyNoiseInfo, error) {
 	return &greyNoiseData, nil
 }
 
-func fetchIpInfoData(ip string, apiKey string) (*ipInfo, error) {
+func getIPInfo(ip string, apiKey string) (*ipInfo, error) {
 	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip, apiKey)
 	// Make the API request
 	resp, err := http.Get(apiUrl)
@@ -89,6 +114,37 @@ func fetchIpInfoData(ip string, apiKey string) (*ipInfo, error) {
 		return nil, fmt.Errorf("failed to parse IPInfo JSON response: %v", err)
 	}
 	return &info, nil
+}
+
+// getAbuseIPDBInfo fetches data from AbuseIPDB for a specific IP address
+func getAbuseIPDBInfo(ip string, apiKey string) *abuseIPDBResponse {
+	apiUrl := fmt.Sprintf(abuseAPIURL, ip)
+	req, err := http.NewRequest("GET", apiUrl, nil)
+	if err != nil {
+		log.Fatalf("Error creating request to AbuseIPDB: %v", err)
+	}
+
+	req.Header.Set("Key", apiKey)
+	req.Header.Set("Accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalf("Error making AbuseIPDB API request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Error reading AbuseIPDB response body: %v", err)
+	}
+
+	var data abuseIPDBResponse
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		log.Fatalf("Error parsing AbuseIPDB JSON response: %v", err)
+	}
+	return &data
 }
 
 func analyzeIP(ip string) {
@@ -116,17 +172,24 @@ func analyzeIP(ip string) {
 		log.Println("API key is missing! Please set the ipinfo_api_key in config.yaml file")
 	}
 
+	abuseIPDBApiKey := viper.GetString("api_keys.abuseipdb.api_key")
+	if abuseIPDBApiKey == "" {
+		log.Println("API key is missing! Please set the ipinfo_api_key in config.yaml file")
+	}
+
 	// Fetch IpInfo api
-	ipInfoData, err := fetchIpInfoData(ip, ipInfoApiKey)
+	ipInfoData, err := getIPInfo(ip, ipInfoApiKey)
 	if err != nil {
 		log.Printf("Error fetching IpInfo data: %v\n", err)
 	}
 
 	// Fetch GreyNoise threat intelligence
-	greyNoiseData, err := fetchGreyNoiseData(ip, greyNoiseApiKey)
+	greyNoiseData, err := getGreyNoiseData(ip, greyNoiseApiKey)
 	if err != nil {
 		log.Printf("Error fetching GreyNoise data: %v\n", err)
 	}
+
+	abuseIPDBData := getAbuseIPDBInfo(ip, abuseIPDBApiKey)
 
 	// Print the IP information
 	fmt.Println(Blue + "IP information from IPInfo" + Reset)
@@ -146,6 +209,29 @@ func analyzeIP(ip string) {
 		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",
 			greyNoiseData.Noise, greyNoiseData.Riot, classification, greyNoiseData.Name, greyNoiseData.Link)
 	}
+
+	if abuseIPDBData != nil {
+		fmt.Println(Blue + "\nAbuseIPDB report" + Reset)
+
+		// Print AbuseIPDB info
+		fmt.Printf("AbuseIPDB Data for IP: %s\n", ip)
+		fmt.Printf("Abuse Confidence Score: %d\n", abuseIPDBData.Data.AbuseConfidenceScore)
+		fmt.Printf("Total Reports: %d\n", abuseIPDBData.Data.TotalReports)
+		fmt.Printf("Last Reported At: %s\n", abuseIPDBData.Data.LastReportedAt)
+
+		// Print the individual reports if available
+		if len(abuseIPDBData.Data.Reports) > 0 {
+			fmt.Println("\nReports:")
+			for _, report := range abuseIPDBData.Data.Reports {
+				fmt.Printf("Reported By: %s\nReported At: %s\nComment: %s\n",
+					report.ReporterCountry, report.ReportedAt, report.Comment)
+			}
+		} else {
+			fmt.Println("No reports found for this IP.")
+		}
+
+	}
+
 }
 
 var ipCmd = &cobra.Command{
