@@ -10,105 +10,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"soc-cli/internal/apis"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-const (
-	greyNoiseAPIURL = "https://api.greynoise.io/v3/community/%s"
-	ipInfoAPIURL    = "https://ipinfo.io/%s?token=%s"
-	abuseAPIURL     = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90"
-)
-
-type ipInfo struct {
-	IP       string `json:"ip"`
-	Country  string `json:"country"`
-	Hostname string `json:"hostname"`
-	Org      string `json:"org"`
-}
-
-type greyNoiseInfo struct {
-	IP             string `json:"ip"`
-	Noise          bool   `json:"noise"`
-	Riot           bool   `json:"riot"`
-	Classification string `json:"classification"`
-	Name           string `json:"name"`
-	Link           string `json:"link"`
-}
-
-type abuseIPDBResponse struct {
-	Data struct {
-		IPAddress            string   `json:"ipAddress"`
-		IsPublic             bool     `json:"isPublic"`
-		IPVersion            int      `json:"ipVersion"`
-		IsWhitelisted        bool     `json:"isWhitelisted"`
-		AbuseConfidenceScore int      `json:"abuseConfidenceScore"`
-		CountryCode          string   `json:"countryCode"`
-		UsageType            string   `json:"usageType"`
-		ISP                  string   `json:"isp"`
-		Domain               string   `json:"domain"`
-		Hostnames            []string `json:"hostnames"`
-		TotalReports         int      `json:"totalReports"`
-		LastReportedAt       string   `json:"lastReportedAt"`
-		Reports              []struct {
-			ReporterID      int    `json:"reporterId"`
-			ReporterCountry string `json:"reporterCountry"`
-			ReportedAt      string `json:"reportedAt"`
-			Comment         string `json:"comment"`
-		} `json:"reports"`
-	} `json:"data"`
-}
-
-// Get threat intelligence from GreyNoise API
-func getGreyNoiseData(ip string, apiKey string) *greyNoiseInfo {
-	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip)
-
-	headers := map[string]string{
-		"key": apiKey,
-	}
-
-	var greyNoiseData greyNoiseInfo
-
-	err := MakeAPIRequest(apiUrl, headers, &greyNoiseData)
-	if err != nil {
-		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
-	}
-
-	return &greyNoiseData
-}
-
-func getIPInfo(ip string, apiKey string) *ipInfo {
-	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip, apiKey)
-
-	var info ipInfo
-
-	err := MakeAPIRequest(apiUrl, nil, &info)
-	if err != nil {
-		log.Fatalf("Error fetching IP info: %v", err)
-	}
-
-	return &info
-}
-
-// getAbuseIPDBInfo fetches data from AbuseIPDB for a specific IP address
-func getAbuseIPDBInfo(ip string, apiKey string) *abuseIPDBResponse {
-	apiUrl := fmt.Sprintf(abuseAPIURL, ip)
-
-	headers := map[string]string{
-		"Key":    apiKey,
-		"Accept": "application/json",
-	}
-
-	var data abuseIPDBResponse
-
-	err := MakeAPIRequest(apiUrl, headers, &data)
-	if err != nil {
-		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
-	}
-
-	return &data
-}
 
 func analyzeIP(ip string) {
 
@@ -141,12 +47,12 @@ func analyzeIP(ip string) {
 	}
 
 	// Fetch IpInfo api
-	ipInfoData := getIPInfo(ip, ipInfoApiKey)
+	ipInfoData := apis.GetIPInfo(ip, ipInfoApiKey)
 
 	// Fetch GreyNoise threat intelligence
-	greyNoiseData := getGreyNoiseData(ip, greyNoiseApiKey)
+	greyNoiseData := apis.GetGreyNoiseData(ip, greyNoiseApiKey)
 
-	abuseIPDBData := getAbuseIPDBInfo(ip, abuseIPDBApiKey)
+	abuseIPDBData := apis.GetAbuseIPDBInfo(ip, abuseIPDBApiKey)
 
 	// Print the IP information
 	fmt.Println(Blue + "IP information from IPInfo" + Reset)
