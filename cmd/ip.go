@@ -38,12 +38,12 @@ func analyzeIP(ip string) {
 
 	ipInfoApiKey := viper.GetString("api_keys.ipinfo.api_key")
 	if ipInfoApiKey == "" {
-		log.Println("API key is missing! Please set the ipinfo_api_key in config.yaml file")
+		log.Println("API key is missing! Please set the ipinfo api_key in config.yaml file")
 	}
 
 	abuseIPDBApiKey := viper.GetString("api_keys.abuseipdb.api_key")
 	if abuseIPDBApiKey == "" {
-		log.Println("API key is missing! Please set the ipinfo_api_key in config.yaml file")
+		log.Println("API key is missing! Please set the abuseipdb api_key in config.yaml file")
 	}
 
 	// Fetch IpInfo api
@@ -77,7 +77,6 @@ func analyzeIP(ip string) {
 		fmt.Println(Blue + "\nAbuseIPDB report" + Reset)
 
 		// Print AbuseIPDB info
-		fmt.Printf("AbuseIPDB Data for IP: %s\n", ip)
 		fmt.Printf("Abuse Confidence Score: %d\n", abuseIPDBData.Data.AbuseConfidenceScore)
 		fmt.Printf("Total Reports: %d\n", abuseIPDBData.Data.TotalReports)
 		fmt.Printf("Last Reported At: %s\n", abuseIPDBData.Data.LastReportedAt)

@@ -17,12 +17,19 @@ import (
 	"time"
 )
 
-// urlScanResult represents a simplified result from URLscan.io
+var defautVisibility = "private" // public, unlisted or private
+
+const (
+	urlscanScanApi   = "https://urlscan.io/api/v1/scan/"
+	urlscanResultApi = "https://urlscan.io/api/v1/result/%s/"
+)
+
 type urlScanResult struct {
 	Page struct {
 		URL     string `json:"url"`
 		Domain  string `json:"domain"`
 		Country string `json:"country"`
+		IP      string `json:"ip"`
 	} `json:"page"`
 	Verdict struct {
 		Malicious bool `json:"malicious"`
@@ -33,16 +40,15 @@ type urlScanResult struct {
 func submitURLScan(url string) (string, error) {
 	apiKey := viper.GetString("api_keys.urlscan.api_key")
 	if apiKey == "" {
-		return "", fmt.Errorf("API key is missing! Please set the urlscan_api_key in config.yaml file")
+		return "", fmt.Errorf("API key is missing! Please set the urlscan api_key in config.yaml file")
 	}
 
-	apiUrl := "https://urlscan.io/api/v1/scan/"
-	requestBody, err := json.Marshal(map[string]string{"url": url})
+	requestBody, err := json.Marshal(map[string]string{"url": url, "visibility": defautVisibility})
 	if err != nil {
 		return "", fmt.Errorf("failed to create request body: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", apiUrl, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", urlscanScanApi, bytes.NewBuffer(requestBody))
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
@@ -72,7 +78,7 @@ func submitURLScan(url string) (string, error) {
 
 // fetchURLScanResult fetches the results of a URL scan
 func fetchURLScanResult(scanID string) (*urlScanResult, error) {
-	apiUrl := fmt.Sprintf("https://urlscan.io/api/v1/result/%s/", scanID)
+	apiUrl := fmt.Sprintf(urlscanResultApi, scanID)
 
 	// Polling for scan results
 	for i := 0; i < 10; i++ {
@@ -104,7 +110,19 @@ func fetchURLScanResult(scanID string) (*urlScanResult, error) {
 	return nil, fmt.Errorf("scan result not available after multiple attempts")
 }
 
-// urlScanCmd represents the URL scanning command
+func displayResults(scanResult urlScanResult) {
+	fmt.Printf("Scan Results for URL: %s\n", scanResult.Page.URL)
+	fmt.Printf("Domain: %s\n", scanResult.Page.Domain)
+	fmt.Printf("Country: %s\n", scanResult.Page.Country)
+	fmt.Printf("IP: %s\n", scanResult.Page.IP)
+	if scanResult.Verdict.Malicious {
+		fmt.Println("Verdict: " + Red + "MALICIOUS")
+	} else {
+		fmt.Println("Verdict: " + Green + "SAFE")
+	}
+
+}
+
 var urlScanCmd = &cobra.Command{
 	Use:   "urlscan [url]",
 	Short: "Submit a URL for malware scanning and fetch the results",
@@ -118,6 +136,7 @@ var urlScanCmd = &cobra.Command{
 			log.Fatalf("Error submitting URL for scan: %v", err)
 		}
 
+		fmt.Printf("Scan ID: %s\n", scanID)
 		fmt.Println("URL submitted successfully. Awaiting results...")
 
 		// Fetch the scan results
@@ -125,16 +144,8 @@ var urlScanCmd = &cobra.Command{
 		if err != nil {
 			log.Fatalf("Error retrieving scan results: %v", err)
 		}
+		displayResults(*scanResult)
 
-		// Print the scan results
-		fmt.Printf("Scan Results for URL: %s\n", scanResult.Page.URL)
-		fmt.Printf("Domain: %s\n", scanResult.Page.Domain)
-		fmt.Printf("Country: %s\n", scanResult.Page.Country)
-		if scanResult.Verdict.Malicious {
-			fmt.Println("Verdict: MALICIOUS")
-		} else {
-			fmt.Println("Verdict: SAFE")
-		}
 	},
 }
 
