@@ -8,12 +8,12 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"log"
 	"os"
 	"soc-cli/internal/apis"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 func analyzeIP(ip string) {
@@ -55,18 +55,18 @@ func analyzeIP(ip string) {
 	abuseIPDBData := apis.GetAbuseIPDBInfo(ip, abuseIPDBApiKey)
 
 	// Print the IP information
-	fmt.Println(Blue + "IP information from IPInfo" + Reset)
+	color.Blue("IP information from IPInfo")
 	fmt.Printf("IP: %s\nHostname: %s\nOrg: %s\nCountry: %s\n",
 		ipInfoData.IP, ipInfoData.Hostname, ipInfoData.Org, ipInfoData.Country)
 
 	if greyNoiseData != nil {
-		fmt.Println(Blue + "\nGreyNoise Threat Intelligence" + Reset)
+		color.Blue("\nGreyNoise Threat Intelligence")
 
 		classification := greyNoiseData.Classification
 		if classification == "malicious" {
-			classification = fmt.Sprintf("%s%s%s", Red, classification, Reset)
+			classification = color.RedString(classification)
 		} else if classification == "benign" {
-			classification = fmt.Sprintf("%s%s%s", Green, classification, Reset)
+			classification = color.GreenString(classification)
 		}
 
 		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",
@@ -74,7 +74,7 @@ func analyzeIP(ip string) {
 	}
 
 	if abuseIPDBData != nil {
-		fmt.Println(Blue + "\nAbuseIPDB report" + Reset)
+		color.Blue("\nAbuseIPDB report")
 
 		// Print AbuseIPDB info
 		fmt.Printf("Abuse Confidence Score: %d\n", abuseIPDBData.Data.AbuseConfidenceScore)

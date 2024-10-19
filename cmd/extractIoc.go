@@ -9,6 +9,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -69,14 +70,14 @@ func extractIOCs(filePath string, asJSON bool) {
 	} else {
 
 		if len(uniqueIPs)+len(uniqueURLs)+len(uniqueEmails)+len(uniqueHashes) > 0 {
-			fmt.Println(Blue + "Extracted IOCs" + Reset)
+			color.Blue("Extracted IOCs")
 		} else {
-			fmt.Println(Blue + "No IOCs found" + Reset)
+			color.Red("No IOCs found")
 		}
 
 		// Print IPs
 		if len(uniqueIPs) > 0 {
-			fmt.Println(Green + "\nIP Addresses:" + Reset)
+			color.Green("\nIP Addresses:")
 			for _, ip := range uniqueIPs {
 				fmt.Println(ip)
 			}
@@ -84,7 +85,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print URLs
 		if len(uniqueURLs) > 0 {
-			fmt.Println(Green + "\nURLs:" + Reset)
+			color.Green("\nURLs:")
 			for _, url := range uniqueURLs {
 				fmt.Println(url)
 			}
@@ -92,7 +93,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print Emails
 		if len(uniqueEmails) > 0 {
-			fmt.Println(Green + "\nEmail Addresses:" + Reset)
+			color.Green("\nEmail Addresses:")
 			for _, email := range uniqueEmails {
 				fmt.Println(email)
 			}
@@ -100,7 +101,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print SHA256 Hashes
 		if len(uniqueHashes) > 0 {
-			fmt.Println(Green + "\nSHA256 Hashes:" + Reset)
+			color.Green("\nSHA256 Hashes:")
 			for _, hash := range uniqueHashes {
 				fmt.Println(hash)
 			}

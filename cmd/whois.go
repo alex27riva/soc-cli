@@ -8,13 +8,14 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"soc-cli/internal/apis"
 )
 
 func displayData(domainInfo apis.DomainInfo) {
 
-	fmt.Println("Domain Information:")
+	color.Blue("Domain Information")
 	fmt.Printf("Domain Name: %s\n", domainInfo.Domain.Domain)
 	fmt.Printf("Domain ID: %s\n", domainInfo.Domain.ID)
 	fmt.Printf("Extension: %s\n", domainInfo.Domain.Extension)
@@ -24,12 +25,12 @@ func displayData(domainInfo apis.DomainInfo) {
 	fmt.Printf("Updated Date: %s\n", domainInfo.Domain.UpdatedDate)
 	fmt.Printf("Expiration Date: %s\n", domainInfo.Domain.ExpirationDate)
 
-	fmt.Println("\nRegistrar Information:")
+	color.Blue("\nRegistrar Information:")
 	fmt.Printf("Registrar Name: %s\n", domainInfo.Registrar.Name)
 	fmt.Printf("Registrar Phone: %s\n", domainInfo.Registrar.Phone)
 	fmt.Printf("Registrar Email: %s\n", domainInfo.Registrar.Email)
 
-	fmt.Println("\nRegistrant Information:")
+	color.Blue("\nRegistrant Information:")
 	fmt.Printf("Registrant Name: %s\n", domainInfo.Registrant.Name)
 	fmt.Printf("Registrant Organization: %s\n", domainInfo.Registrant.Organization)
 	fmt.Printf("Registrant Country: %s\n", domainInfo.Registrant.Country)

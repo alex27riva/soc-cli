@@ -11,6 +11,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"io"
 	"log"
@@ -20,7 +21,7 @@ import (
 func openFile(filePath string) (*os.File, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf(Red+"failed to open file: %w"+Reset, err)
+		return nil, fmt.Errorf("failed to open file: %w", err)
 	}
 
 	return file, nil
@@ -70,12 +71,12 @@ var hashCmd = &cobra.Command{
 
 		defer file.Close()
 
-		fmt.Println(Green+"MD5:"+Reset, calculateMd5(file))
+		fmt.Println(color.GreenString("MD5:"), calculateMd5(file))
 		// Reset the file pointer to the beginning
 		file.Seek(0, 0)
-		fmt.Println(Green+"SHA1:"+Reset, calculateSha1(file))
+		fmt.Println(color.GreenString("SHA1:"), calculateSha1(file))
 		file.Seek(0, 0)
-		fmt.Println(Green+"SHA-256:"+Reset, calculateSha256(file))
+		fmt.Println(color.GreenString("SHA-256:"), calculateSha256(file))
 	},
 }
 

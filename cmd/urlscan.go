@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"
@@ -116,9 +117,9 @@ func displayResults(scanResult urlScanResult) {
 	fmt.Printf("Country: %s\n", scanResult.Page.Country)
 	fmt.Printf("IP: %s\n", scanResult.Page.IP)
 	if scanResult.Verdict.Malicious {
-		fmt.Println("Verdict: " + Red + "MALICIOUS")
+		fmt.Println("Verdict: " + color.RedString("MALICIOUS"))
 	} else {
-		fmt.Println("Verdict: " + Green + "SAFE")
+		fmt.Println("Verdict: " + color.RedString("SAFE"))
 	}
 
 }
