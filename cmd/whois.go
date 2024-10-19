@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"os"
 	"soc-cli/internal/apis"
+	"soc-cli/internal/util"
 )
 
 func displayData(domainInfo apis.DomainInfo) {
@@ -44,6 +46,11 @@ var whoisCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		target := args[0]
+
+		if !util.DomainRegex.MatchString(target) {
+			color.Red("Please provide a valid domain name")
+			os.Exit(1)
+		}
 
 		whoisData := apis.GetWhoisData(target)
 		displayData(*whoisData)
