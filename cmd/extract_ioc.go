@@ -17,10 +17,11 @@ import (
 )
 
 type iocOutput struct {
-	URLs   []string `json:"urls"`
-	IPs    []string `json:"ips"`
-	Emails []string `json:"emails"`
-	Hashes []string `json:"hashes"`
+	URLs    []string `json:"urls"`
+	IPs     []string `json:"ips"`
+	Emails  []string `json:"emails"`
+	Domains []string `json:"domains"`
+	Hashes  []string `json:"hashes"`
 }
 
 var extractIocCmd = &cobra.Command{
@@ -48,18 +49,20 @@ func extractIOCs(filePath string, asJSON bool) {
 	}
 
 	// Find all IOCs
-	uniqueURLs := removeDuplicates(util.URLRegex.FindAllString(string(data), -1))
-	uniqueIPs := removeDuplicates(util.IPRegex.FindAllString(string(data), -1))
-	uniqueEmails := removeDuplicates(util.EmailRegex.FindAllString(string(data), -1))
-	uniqueHashes := removeDuplicates(util.SHA256Regex.FindAllString(string(data), -1))
+	uniqueURLs := util.RemoveDuplicates(util.URLRegex.FindAllString(string(data), -1))
+	uniqueIPs := util.RemoveDuplicates(util.IPRegex.FindAllString(string(data), -1))
+	uniqueEmails := util.RemoveDuplicates(util.EmailRegex.FindAllString(string(data), -1))
+	uniqueDomains := util.RemoveDuplicates(util.DomainRegex.FindAllString(string(data), -1))
+	uniqueHashes := util.RemoveDuplicates(util.SHA256Regex.FindAllString(string(data), -1))
 
 	if asJSON {
 		// Prepare data for JSON output
 		iocData := iocOutput{
-			URLs:   uniqueURLs,
-			IPs:    uniqueIPs,
-			Emails: uniqueEmails,
-			Hashes: uniqueHashes,
+			URLs:    uniqueURLs,
+			IPs:     uniqueIPs,
+			Emails:  uniqueEmails,
+			Domains: uniqueDomains,
+			Hashes:  uniqueHashes,
 		}
 
 		// Marshal to JSON and print
@@ -100,6 +103,14 @@ func extractIOCs(filePath string, asJSON bool) {
 			}
 		}
 
+		// Print Domains
+		if len(uniqueDomains) > 0 {
+			color.Green("\nDomains:")
+			for _, email := range uniqueDomains {
+				fmt.Println(email)
+			}
+		}
+
 		// Print SHA256 Hashes
 		if len(uniqueHashes) > 0 {
 			color.Green("\nSHA256 Hashes:")
@@ -108,17 +119,4 @@ func extractIOCs(filePath string, asJSON bool) {
 			}
 		}
 	}
-}
-
-// Helper function to remove duplicate IOCs
-func removeDuplicates(items []string) []string {
-	uniqueItems := make(map[string]bool)
-	result := []string{}
-	for _, item := range items {
-		if !uniqueItems[item] {
-			uniqueItems[item] = true
-			result = append(result, item)
-		}
-	}
-	return result
 }
