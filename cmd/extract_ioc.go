@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"soc-cli/internal/util"
 )
 
 type iocOutput struct {
@@ -47,10 +48,10 @@ func extractIOCs(filePath string, asJSON bool) {
 	}
 
 	// Find all IOCs
-	uniqueURLs := removeDuplicates(URLRegex.FindAllString(string(data), -1))
-	uniqueIPs := removeDuplicates(IPRegex.FindAllString(string(data), -1))
-	uniqueEmails := removeDuplicates(EmailRegex.FindAllString(string(data), -1))
-	uniqueHashes := removeDuplicates(SHA256Regex.FindAllString(string(data), -1))
+	uniqueURLs := removeDuplicates(util.URLRegex.FindAllString(string(data), -1))
+	uniqueIPs := removeDuplicates(util.IPRegex.FindAllString(string(data), -1))
+	uniqueEmails := removeDuplicates(util.EmailRegex.FindAllString(string(data), -1))
+	uniqueHashes := removeDuplicates(util.SHA256Regex.FindAllString(string(data), -1))
 
 	if asJSON {
 		// Prepare data for JSON output

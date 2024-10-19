@@ -4,7 +4,7 @@ Copyright © 2024 Alessandro Riva
 Licensed under the MIT License.
 See the LICENSE file for details.
 */
-package cmd
+package util
 
 import "regexp"
 

@@ -14,13 +14,14 @@ import (
 	"log"
 	"os"
 	"soc-cli/internal/apis"
+	"soc-cli/internal/util"
 )
 
 func analyzeIP(ip string) {
 
 	// Validate provided IP address
-	if IPRegex.MatchString(ip) {
-		if RFC1918Regex.MatchString(ip) {
+	if util.IPRegex.MatchString(ip) {
+		if util.RFC1918Regex.MatchString(ip) {
 			fmt.Printf("The IP provided %s is a RFC1918 bogus IP address.\n", ip)
 			os.Exit(0)
 		} else if ip == "127.0.0.1" {

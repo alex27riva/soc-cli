@@ -25,12 +25,12 @@ func displayData(domainInfo apis.DomainInfo) {
 	fmt.Printf("Updated Date: %s\n", domainInfo.Domain.UpdatedDate)
 	fmt.Printf("Expiration Date: %s\n", domainInfo.Domain.ExpirationDate)
 
-	color.Blue("\nRegistrar Information:")
+	color.Blue("\nRegistrar Information")
 	fmt.Printf("Registrar Name: %s\n", domainInfo.Registrar.Name)
 	fmt.Printf("Registrar Phone: %s\n", domainInfo.Registrar.Phone)
 	fmt.Printf("Registrar Email: %s\n", domainInfo.Registrar.Email)
 
-	color.Blue("\nRegistrant Information:")
+	color.Blue("\nRegistrant Information")
 	fmt.Printf("Registrant Name: %s\n", domainInfo.Registrant.Name)
 	fmt.Printf("Registrant Organization: %s\n", domainInfo.Registrant.Organization)
 	fmt.Printf("Registrant Country: %s\n", domainInfo.Registrant.Country)
