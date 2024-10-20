@@ -12,7 +12,7 @@ import (
 	"soc-cli/internal/util"
 )
 
-const abuseAPIURL = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90"
+const abuseAPIURL = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90&verbose"
 
 type abuseIPDBResponse struct {
 	Data struct {

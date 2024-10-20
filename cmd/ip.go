@@ -9,6 +9,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/rodaine/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"log"
@@ -16,6 +17,9 @@ import (
 	"soc-cli/internal/apis"
 	"soc-cli/internal/util"
 )
+
+var reportLimit = 3
+var reportMaxLen = 40
 
 func analyzeIP(ip string) {
 
@@ -84,15 +88,26 @@ func analyzeIP(ip string) {
 
 		// Print the individual reports if available
 		if len(abuseIPDBData.Data.Reports) > 0 {
-			fmt.Println("\nReports:")
-			for _, report := range abuseIPDBData.Data.Reports {
-				fmt.Printf("Reported By: %s\nReported At: %s\nComment: %s\n",
-					report.ReporterCountry, report.ReportedAt, report.Comment)
+			fmt.Println("Reports:")
+			headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
+			columnFmt := color.New(color.FgYellow).SprintfFunc()
+
+			tbl := table.New("Date", "Country", "Comment")
+			tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
+
+			for index, report := range abuseIPDBData.Data.Reports {
+				if index > reportLimit {
+					break
+				}
+				humanTime, _ := util.HumanReadableDate(report.ReportedAt)
+				tbl.AddRow(humanTime, report.ReporterCountry, util.ShortStr(report.Comment, reportMaxLen))
 			}
-		} else {
-			fmt.Println("No reports found for this IP.")
+			tbl.Print()
+
 		}
 
+	} else {
+		fmt.Println("No reports found for this IP.")
 	}
 
 }
