@@ -25,7 +25,6 @@ var defangCmd = &cobra.Command{
 		var input string
 
 		if len(args) > 0 {
-			fmt.Println(len(args))
 			input = args[0]
 		} else {
 			if !isInputFromPipe() {
