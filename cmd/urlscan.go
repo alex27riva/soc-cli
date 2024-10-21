@@ -119,7 +119,7 @@ func displayResults(scanResult urlScanResult) {
 	if scanResult.Verdict.Malicious {
 		fmt.Println("Verdict: " + color.RedString("MALICIOUS"))
 	} else {
-		fmt.Println("Verdict: " + color.RedString("SAFE"))
+		fmt.Println("Verdict: " + color.GreenString("SAFE"))
 	}
 
 }

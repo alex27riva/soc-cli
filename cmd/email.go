@@ -8,6 +8,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"io"
 	"mime"
@@ -47,26 +48,28 @@ func analyzeEmail(filePath string) {
 		fmt.Println("Error parsing .eml file:", err)
 		return
 	}
-
-	fmt.Println("Subject:", msg.Header.Get("Subject"))
+	color.Blue("Main information:")
 	fmt.Println("From:", msg.Header.Get("From"))
 	fmt.Println("To:", msg.Header.Get("To"))
+	fmt.Println("Subject:", msg.Header.Get("Subject"))
+	fmt.Println("Date:", msg.Header.Get("Date"))
+	fmt.Println("Return-Path:", msg.Header.Get("Return-Path"))
 
 	// Check for SPF information
 	spfHeader := msg.Header.Get("Received-SPF")
 	if spfHeader != "" {
-		fmt.Println("\nSPF Information:", spfHeader)
+		fmt.Println(color.BlueString("\nSPF Information:\n"), spfHeader)
 	} else {
-		fmt.Println("\nSPF Information: No Received-SPF header found.")
+		fmt.Println(color.BlueString("\nSPF Information:\n") + "No Received-SPF header found.")
 	}
 
 	// Extract DKIM Information
 	dkimHeader := msg.Header.Get("DKIM-Signature")
 	if dkimHeader != "" {
-		fmt.Println("\nDKIM Information:")
+		color.Blue("\nDKIM Information:")
 		fmt.Println(dkimHeader)
 	} else {
-		fmt.Println("\nDKIM Information: No DKIM-Signature header found.")
+		fmt.Println(color.BlueString("\nDKIM Information:\n") + "No DKIM-Signature header found.")
 	}
 
 	// Extract DMARC Information from Authentication-Results header
@@ -126,23 +129,23 @@ func processMultipart(mr *multipart.Reader) {
 
 // extractDMARCDKIM extracts DMARC and DKIM results from the Authentication-Results header
 func extractDMARCDKIM(authResults string) {
-	fmt.Println("\nAuthentication Results:")
+	color.Blue("\nAuthentication Results:")
 	fmt.Println(authResults)
 
 	// Check for DKIM result
 	if strings.Contains(authResults, "dkim=pass") {
-		fmt.Println("DKIM: pass")
+		fmt.Println("DKIM:", color.GreenString("pass"))
 	} else if strings.Contains(authResults, "dkim=fail") {
-		fmt.Println("DKIM: fail")
+		fmt.Println("DKIM:", color.RedString("fail"))
 	} else {
 		fmt.Println("DKIM: No DKIM result found.")
 	}
 
 	// Check for DMARC result
 	if strings.Contains(authResults, "dmarc=pass") {
-		fmt.Println("DMARC: pass")
+		fmt.Println("DMARC:", color.GreenString("pass"))
 	} else if strings.Contains(authResults, "dmarc=fail") {
-		fmt.Println("DMARC: fail")
+		fmt.Println("DMARC:", color.RedString("fail"))
 	} else {
 		fmt.Println("DMARC: No DMARC result found.")
 	}
@@ -153,11 +156,11 @@ func extractLinks(body string) {
 	links := util.URLRegex.FindAllString(body, -1)
 
 	if len(links) > 0 {
-		fmt.Println("\nLinks found in the email:")
+		color.Blue("\nLinks found in the email:")
 		for _, link := range links {
 			fmt.Println("-", link)
 		}
 	} else {
-		fmt.Println("\nNo links found in the email.")
+		color.Blue("\nNo links found in the email.")
 	}
 }
