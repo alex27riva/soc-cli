@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/cobra"
 	"log"
 	"os"
-	"regexp"
 	"runtime"
+	"soc-cli/internal/logic"
 	"strings"
 )
 
@@ -39,37 +39,13 @@ var defangCmd = &cobra.Command{
 			input = strings.TrimSpace(in)
 		}
 
-		defanged := defang(input)
+		defanged := logic.Defang(input)
 		fmt.Println(defanged)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(defangCmd)
-}
-
-func defang(input string) string {
-	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	if emailRegex.MatchString(input) {
-		return defangEmail(input)
-	}
-
-	return defangURL(input)
-}
-
-func defangEmail(email string) string {
-	defanged := strings.Replace(email, "@", "[at]", 1)
-	defanged = strings.Replace(defanged, ".", "[.]", -1)
-
-	return defanged
-}
-
-func defangURL(url string) string {
-	defanged := strings.Replace(url, "http://", "hxxp://", 1)
-	defanged = strings.Replace(defanged, "https://", "hxxps://", 1)
-	defanged = strings.Replace(defanged, ".", "[.]", -1)
-
-	return defanged
 }
 
 // isInputFromPipe checks if the standard input is coming from a pipe
