@@ -7,7 +7,6 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
@@ -15,6 +14,7 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"net/http"
+	"soc-cli/internal/util"
 	"time"
 )
 
@@ -47,30 +47,15 @@ func submitURLScan(url string) (string, error) {
 		return "", fmt.Errorf("API key is missing! Please set the urlscan api_key in config.yaml file")
 	}
 
-	requestBody, err := json.Marshal(map[string]string{"url": url, "visibility": defautVisibility})
-	if err != nil {
-		return "", fmt.Errorf("failed to create request body: %v", err)
-	}
+	requestBody := map[string]string{"url": url, "visibility": defautVisibility}
 
-	req, err := http.NewRequest("POST", urlscanScanApi, bytes.NewBuffer(requestBody))
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %v", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("API-Key", apiKey)
+	var result map[string]interface{}
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	err := util.MakePOSTRequest(urlscanScanApi, map[string]string{"API-Key": apiKey}, requestBody, &result)
+
 	if err != nil {
 		return "", fmt.Errorf("failed to submit URL scan request: %v", err)
 	}
-	defer resp.Body.Close()
-
-	var result map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", fmt.Errorf("failed to parse response: %v", err)
-	}
-
 	// Extract the scan ID to check for the scan status
 	scanID, ok := result["uuid"].(string)
 	if !ok {
