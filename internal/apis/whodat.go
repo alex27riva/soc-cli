@@ -69,7 +69,7 @@ func GetWhoisData(domain string) *DomainInfo {
 
 	var whois DomainInfo
 
-	err := util.MakeAPIRequest(apiUrl, nil, &whois)
+	err := util.MakeGETRequest(apiUrl, nil, &whois)
 	if err != nil {
 		log.Fatalf("Error fetching whodat API: %v", err)
 	}
