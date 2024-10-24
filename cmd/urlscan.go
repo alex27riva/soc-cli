@@ -32,6 +32,9 @@ type urlScanResult struct {
 		Country string `json:"country"`
 		IP      string `json:"ip"`
 	} `json:"page"`
+	Task struct {
+		ReportURL string `json:"reportURL"`
+	}
 	Verdict struct {
 		Malicious bool `json:"malicious"`
 	} `json:"verdicts"`
@@ -116,6 +119,7 @@ func displayResults(scanResult urlScanResult) {
 	fmt.Printf("Domain: %s\n", scanResult.Page.Domain)
 	fmt.Printf("Country: %s\n", scanResult.Page.Country)
 	fmt.Printf("IP: %s\n", scanResult.Page.IP)
+	fmt.Printf("Link: %s\n", scanResult.Task.ReportURL)
 	if scanResult.Verdict.Malicious {
 		fmt.Println("Verdict: " + color.RedString("MALICIOUS"))
 	} else {
@@ -137,8 +141,7 @@ var urlScanCmd = &cobra.Command{
 			log.Fatalf("Error submitting URL for scan: %v", err)
 		}
 
-		fmt.Printf("Scan ID: %s\n", scanID)
-		fmt.Println("URL submitted successfully. Awaiting results...")
+		color.Blue("URL submitted successfully. Awaiting results...")
 
 		// Fetch the scan results
 		scanResult, err := fetchURLScanResult(scanID)
