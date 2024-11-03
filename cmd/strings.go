@@ -31,7 +31,7 @@ var stringsCmd = &cobra.Command{
 }
 
 func init() {
-	stringsCmd.Flags().IntVarP(&minLength, "min-length", "m", 5, "Minimum length of strings to extract (default is 5)")
+	stringsCmd.Flags().IntVarP(&minLength, "min-length", "m", 5, "Minimum length of strings to extract")
 	stringsCmd.Flags().BoolVarP(&asciiOnly, "ascii", "a", false, "Extract only ASCII printable characters")
 	rootCmd.AddCommand(stringsCmd)
 }

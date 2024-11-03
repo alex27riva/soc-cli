@@ -7,17 +7,15 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "soc",
 	Short: "A cli tool for SoC analysts",
-	Long: `A CLI tool for security analysts to analyze IP addresses, URLs, and emails.
-	It defangs and fangs URLs or email addresses, parses .eml files to list attachments and links,
-	 and performs SPF, DKIM, and DMARC validation.`,
+	Long: `soc-cli is a comprehensive command-line application designed for security analysts to streamline threat analysis and incident response.
+From IP analysis to IOC extraction, file scanning, and URL defanging, soc-cli offers various commands to support daily tasks in security operations centers.`,
 }
 
 func Execute() {

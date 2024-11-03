@@ -19,7 +19,7 @@ import (
 )
 
 var reportLimit = 3
-var reportMaxLen = 40
+var reportMaxLen int
 
 func analyzeIP(ip string) {
 
@@ -88,7 +88,6 @@ func analyzeIP(ip string) {
 
 		// Print the individual reports if available
 		if len(abuseIPDBData.Data.Reports) > 0 {
-			fmt.Println("Reports:")
 			headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
 			columnFmt := color.New(color.FgYellow).SprintfFunc()
 
@@ -123,5 +122,6 @@ var ipCmd = &cobra.Command{
 }
 
 func init() {
+	ipCmd.Flags().IntVarP(&reportMaxLen, "length", "l", 50, "AbuseIPDB report max length")
 	rootCmd.AddCommand(ipCmd)
 }

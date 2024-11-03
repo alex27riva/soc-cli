@@ -30,7 +30,7 @@ type abuseIPDBResponse struct {
 		LastReportedAt       string   `json:"lastReportedAt"`
 		Reports              []struct {
 			ReporterID      int    `json:"reporterId"`
-			ReporterCountry string `json:"reporterCountry"`
+			ReporterCountry string `json:"reporterCountryCode"`
 			ReportedAt      string `json:"reportedAt"`
 			Comment         string `json:"comment"`
 		} `json:"reports"`
