@@ -7,15 +7,11 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
-	"crypto/sha256"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"io"
-	"log"
 	"os"
+	"soc-cli/internal/logic"
 )
 
 func openFile(filePath string) (*os.File, error) {
@@ -25,36 +21,6 @@ func openFile(filePath string) (*os.File, error) {
 	}
 
 	return file, nil
-}
-
-func calculateMd5(file *os.File) string {
-	hmd5 := md5.New()
-	if _, err := io.Copy(hmd5, file); err != nil {
-		log.Fatal("failed to calculate MD5 of file: %w", err)
-	}
-	hashmd5 := hmd5.Sum(nil)
-	hexmd5 := fmt.Sprintf("%x", hashmd5)
-	return hexmd5
-}
-
-func calculateSha1(file *os.File) string {
-	h1 := sha1.New()
-	if _, err := io.Copy(h1, file); err != nil {
-		log.Fatal("failed to calculate SHA1 of file: %w", err)
-	}
-	hashsha1 := h1.Sum(nil)
-	hex1 := fmt.Sprintf("%x", hashsha1)
-	return hex1
-}
-
-func calculateSha256(file *os.File) string {
-	h256 := sha256.New()
-	if _, err := io.Copy(h256, file); err != nil {
-		log.Fatal("failed to calculate SHA256 of file: %w", err)
-	}
-	hash256 := h256.Sum(nil)
-	hex256 := fmt.Sprintf("%x", hash256)
-	return hex256
 }
 
 var hashCmd = &cobra.Command{
@@ -71,12 +37,12 @@ var hashCmd = &cobra.Command{
 
 		defer file.Close()
 
-		fmt.Println(color.GreenString("MD5:"), calculateMd5(file))
+		fmt.Println(color.GreenString("MD5:"), logic.ComputeMd5(file))
 		// Reset the file pointer to the beginning
 		file.Seek(0, 0)
-		fmt.Println(color.GreenString("SHA1:"), calculateSha1(file))
+		fmt.Println(color.GreenString("SHA1:"), logic.ComputeSha1(file))
 		file.Seek(0, 0)
-		fmt.Println(color.GreenString("SHA-256:"), calculateSha256(file))
+		fmt.Println(color.GreenString("SHA-256:"), logic.ComputeSha256(file))
 	},
 }
 
