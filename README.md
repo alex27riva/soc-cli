@@ -1,6 +1,6 @@
 # soc-cli
 
-`soc-cli` is a command-line tool designed for Security Operations Center (SOC) analysts to aid in IP analysis, IOC extraction, URL scanning, and more.
+`soc-cli` is a command-line tool designed for SOC analysts (Security Operations Center) to aid in IP analysis, IOC extraction, URL scanning, and more.
 Built with Go, this tool provides a variety of commands to simplify threat intelligence workflows.
 
 ## Features
@@ -11,13 +11,15 @@ Built with Go, this tool provides a variety of commands to simplify threat intel
 - **Hash Calculation**: Calculate SHA256 hashes of files for integrity checks.
 - **Email Analysis**: Analyze `.eml` files for attachments, links, and email authentication (SPF, DKIM, DMARC).
 - **Defang/Fang**: Defang or re-fang URLs and email addresses to safely share them in reports.
+- **Strings**: Extract printable strings from a file.
+- **Whois**: Perform a WHOIS lookup on a domain.
 
 ## Installation
 
 1. **Clone the repository**:
 
     ```bash
-    git clone https://github.com/yourusername/soc-cli.git
+    git clone https://github.com/alex27riva/soc-cli.git
     cd soc-cli
     ```
 
@@ -33,7 +35,7 @@ Built with Go, this tool provides a variety of commands to simplify threat intel
     ./soc-cli
     ```
 
-<!-- Alternatively, you can download a pre-built binary from the [releases](https://github.com/yourusername/soc-cli/releases) page. -->
+<!-- Alternatively, you can download a pre-built binary from the [releases](https://github.com/alex27riva/soc-cli/releases) page. -->
 
 ## Configuration
 
@@ -128,6 +130,12 @@ soc-cli hash /path/to/file.txt
 
 # Defang an email address for safe sharing
 soc-cli defang user@example.com
+
+# Extract printable strings from a file
+soc-cli strings /path/to/file.txt
+
+# Perform a WHOIS lookup on a domain
+soc-cli whois example.com
 
 # Show the current version
 soc-cli version
