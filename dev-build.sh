@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-export VERSION=dev-$(git rev-parse --short HEAD)
+VERSION=dev-$(git rev-parse --short HEAD)
 go build -o build/soc -ldflags "-X 'soc-cli/cmd.Version=$VERSION'"
