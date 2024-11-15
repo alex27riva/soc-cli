@@ -9,11 +9,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"soc-cli/internal/logic"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 type hashOutput struct {
@@ -44,14 +45,14 @@ func showHashes(filePath string, asJson bool) {
 	file.Seek(0, 0)
 	sha1Digest := logic.ComputeSha1(file)
 	file.Seek(0, 0)
-	sha256 := logic.ComputeSha256(file)
+	sha256Digest := logic.ComputeSha256(file)
 
 	if asJson {
 
 		hashData := hashOutput{
 			MD5:    md5Digest,
 			SHA1:   sha1Digest,
-			SHA256: sha1Digest}
+			SHA256: sha256Digest}
 
 		// Marshal to JSON and print
 		jsonData, err := json.MarshalIndent(hashData, "", "  ")
@@ -64,7 +65,7 @@ func showHashes(filePath string, asJson bool) {
 
 		fmt.Println(color.GreenString("MD5:"), md5Digest)
 		fmt.Println(color.GreenString("SHA1:"), sha1Digest)
-		fmt.Println(color.GreenString("SHA-256:"), sha256)
+		fmt.Println(color.GreenString("SHA256:"), sha256Digest)
 
 	}
 
