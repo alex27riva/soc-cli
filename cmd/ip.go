@@ -80,6 +80,10 @@ func analyzeIP(ip string) {
 
 	if abuseIPDBData != nil {
 		color.Blue("\nAbuseIPDB report")
+		if abuseIPDBData.Data.TotalReports == 0 {
+			fmt.Println("No reports found for this IP address")
+			return
+		}
 
 		// Print AbuseIPDB info
 		fmt.Printf("Abuse Confidence Score: %d\n", abuseIPDBData.Data.AbuseConfidenceScore)
@@ -106,7 +110,7 @@ func analyzeIP(ip string) {
 		}
 
 	} else {
-		fmt.Println("No reports found for this IP.")
+		color.Red("An error has occured.")
 	}
 
 }
