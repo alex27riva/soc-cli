@@ -8,7 +8,6 @@ package apis
 
 import (
 	"fmt"
-	"log"
 	"soc-cli/internal/util"
 )
 
@@ -64,15 +63,12 @@ type DomainInfo struct {
 	Technical      Contact   `json:"technical"`
 }
 
-func GetWhoisData(domain string) *DomainInfo {
+func GetWhoisData(domain string) (*DomainInfo, error) {
 	apiUrl := fmt.Sprintf(whodatAPIURL, domain)
 
 	var whois DomainInfo
 
 	err := util.MakeGETRequest(apiUrl, nil, &whois)
-	if err != nil {
-		log.Fatalf("Error fetching whodat API: %v", err)
-	}
 
-	return &whois
+	return &whois, err
 }
