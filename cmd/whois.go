@@ -55,6 +55,7 @@ var whoisCmd = &cobra.Command{
 		whoisData, err := apis.GetWhoisData(target)
 		if err != nil {
 			color.Red("An error has occured.")
+			os.Exit(1)
 		} else {
 			displayData(*whoisData)
 

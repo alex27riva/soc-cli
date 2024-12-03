@@ -8,14 +8,17 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/rodaine/table"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"os"
 	"soc-cli/internal/apis"
 	"soc-cli/internal/util"
+	"strings"
+	"time"
+
+	"github.com/fatih/color"
+	"github.com/rodaine/table"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var reportLimit = 3
@@ -69,9 +72,9 @@ func analyzeIP(ip string) {
 
 		classification := greyNoiseData.Classification
 		if classification == "malicious" {
-			classification = color.RedString(classification)
+			classification = color.RedString(strings.ToUpper(classification))
 		} else if classification == "benign" {
-			classification = color.GreenString(classification)
+			classification = color.GreenString(strings.ToUpper(classification))
 		}
 
 		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",
@@ -84,11 +87,13 @@ func analyzeIP(ip string) {
 			fmt.Println("No reports found for this IP address")
 			return
 		}
+		// Parse date from string
+		lastReportDate, _ := time.Parse(time.RFC3339, abuseIPDBData.Data.LastReportedAt)
 
 		// Print AbuseIPDB info
 		fmt.Printf("Abuse Confidence Score: %d\n", abuseIPDBData.Data.AbuseConfidenceScore)
 		fmt.Printf("Total Reports: %d\n", abuseIPDBData.Data.TotalReports)
-		fmt.Printf("Last Reported At: %s\n", abuseIPDBData.Data.LastReportedAt)
+		fmt.Printf("Last Reported At: %s\n", lastReportDate.Format("Monday, January 2, 2006"))
 
 		// Print the individual reports if available
 		if len(abuseIPDBData.Data.Reports) > 0 {
@@ -111,6 +116,7 @@ func analyzeIP(ip string) {
 
 	} else {
 		color.Red("An error has occured.")
+		os.Exit(1)
 	}
 
 }
