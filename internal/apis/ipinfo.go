@@ -9,6 +9,7 @@ package apis
 import (
 	"fmt"
 	"log"
+	"net"
 	"soc-cli/internal/util"
 )
 
@@ -21,8 +22,8 @@ type ipInfo struct {
 	Org      string `json:"org"`
 }
 
-func GetIPInfo(ip string, apiKey string) *ipInfo {
-	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip, apiKey)
+func GetIPInfo(ip net.IP, apiKey string) *ipInfo {
+	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip.String(), apiKey)
 
 	var info ipInfo
 

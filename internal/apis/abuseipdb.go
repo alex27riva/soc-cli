@@ -9,6 +9,7 @@ package apis
 import (
 	"fmt"
 	"log"
+	"net"
 	"soc-cli/internal/util"
 )
 
@@ -38,8 +39,8 @@ type abuseIPDBResponse struct {
 }
 
 // getAbuseIPDBInfo fetches data from AbuseIPDB for a specific IP address
-func GetAbuseIPDBInfo(ip string, apiKey string) *abuseIPDBResponse {
-	apiUrl := fmt.Sprintf(abuseAPIURL, ip)
+func GetAbuseIPDBInfo(ip net.IP, apiKey string) *abuseIPDBResponse {
+	apiUrl := fmt.Sprintf(abuseAPIURL, ip.String())
 
 	headers := map[string]string{
 		"Key":    apiKey,

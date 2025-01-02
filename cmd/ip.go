@@ -9,6 +9,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"soc-cli/internal/apis"
 	"soc-cli/internal/util"
@@ -24,19 +25,28 @@ import (
 var reportLimit = 3
 var reportMaxLen int
 
-func analyzeIP(ip string) {
+func analyzeIP(inputIP string) {
+
+	ip := net.ParseIP(inputIP)
+	if ip == nil {
+		color.Red("Invalid IP address.")
+		os.Exit(1)
+	}
 
 	// Validate provided IP address
-	if util.IPRegex.MatchString(ip) {
-		if util.RFC1918Regex.MatchString(ip) {
-			fmt.Printf("The IP provided %s is a RFC1918 bogus IP address.\n", ip)
-			os.Exit(0)
-		} else if ip == "127.0.0.1" {
-			fmt.Printf("The IP provided %s is a loopback IP address.\n", ip)
-			os.Exit(0)
-		}
-	} else {
-		log.Fatalf("The IP provided %s is not a valid IPv4 address.\n", ip)
+	switch {
+	case ip.IsPrivate():
+		color.Red("The IP %s is a RFC1918 bogus IP address.\n", ip)
+		os.Exit(0)
+	case ip.IsLoopback():
+		color.Red("The IP %s is a loopback IP address.\n", ip)
+		os.Exit(0)
+	case ip.IsMulticast():
+		color.Red("The IP %s is a multicast IP address.\n", ip)
+		os.Exit(0)
+	case ip.To16() != nil && ip.To4() == nil:
+		color.Red("IPv6 addresses are not supported yet.")
+		os.Exit(0)
 	}
 
 	greyNoiseApiKey := viper.GetString("api_keys.greynoise.api_key")

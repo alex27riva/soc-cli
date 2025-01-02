@@ -9,6 +9,7 @@ package apis
 import (
 	"fmt"
 	"log"
+	"net"
 	"soc-cli/internal/util"
 )
 
@@ -24,8 +25,8 @@ type greyNoiseInfo struct {
 }
 
 // Get threat intelligence from GreyNoise API
-func GetGreyNoiseData(ip string, apiKey string) *greyNoiseInfo {
-	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip)
+func GetGreyNoiseData(ip net.IP, apiKey string) *greyNoiseInfo {
+	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip.String())
 
 	headers := map[string]string{
 		"key": apiKey,
