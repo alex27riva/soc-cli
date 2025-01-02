@@ -64,3 +64,7 @@ func formatDuration(d time.Duration) string {
 	}
 	return "just now"
 }
+
+func IsValidDomain(domain string) bool {
+	return DomainRegex.MatchString(domain)
+}

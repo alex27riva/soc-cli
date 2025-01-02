@@ -25,9 +25,8 @@ import (
 var reportLimit = 3
 var reportMaxLen int
 
-func analyzeIP(inputIP string) {
-
-	ip := net.ParseIP(inputIP)
+func checkInput(input string) {
+	ip := net.ParseIP(input)
 	if ip == nil {
 		color.Red("Invalid IP address.")
 		os.Exit(1)
@@ -48,6 +47,11 @@ func analyzeIP(inputIP string) {
 		color.Red("IPv6 addresses are not supported yet.")
 		os.Exit(0)
 	}
+
+	analyzeIP(ip)
+}
+
+func analyzeIP(ip net.IP) {
 
 	greyNoiseApiKey := viper.GetString("api_keys.greynoise.api_key")
 	if greyNoiseApiKey == "" {
