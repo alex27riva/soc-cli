@@ -13,15 +13,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"os"
-	"time"
-	"mime/multipart"
-	"strings"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"io"
+	"log"
+	"mime/multipart"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 )
 
 const virusTotalBaseURL = "https://www.virustotal.com/api/v3"
@@ -59,6 +59,7 @@ func checkFileOnVirusTotal(filePath string) {
 	// Check if file already exists in VirusTotal
 	if fileExistsInVirusTotal(apiKey, hash) {
 		fmt.Println("File already analyzed on VirusTotal.")
+
 	} else {
 		// Ask for confirmation before uploading
 		if confirmUpload() {
@@ -105,7 +106,6 @@ func fileExistsInVirusTotal(apiKey, hash string) bool {
 	req.Header.Set("x-apikey", apiKey)
 	req.Header.Add("accept", "application/json")
 
-
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalf("Error making request: %v", err)
@@ -117,7 +117,7 @@ func fileExistsInVirusTotal(apiKey, hash string) bool {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Unexpected response from VirusTotal: %v", resp.Status)
+		log.Fatalf("Unexpected response from VirusTotal: %v", resp)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -130,13 +130,13 @@ func fileExistsInVirusTotal(apiKey, hash string) bool {
 		log.Fatalf("Error parsing JSON response: %v", err)
 	}
 
-	fmt.Printf("VirusTotal Analysis Summary: %v\n", result["data"])
+	displayVirusTotalReport(result)
 
 	return true
 }
 
 func uploadFileToVirusTotal(apiKey, filePath string) {
-	
+
 	// Create a buffer to hold the multipart form data
 	var b bytes.Buffer
 	writer := multipart.NewWriter(&b)
@@ -146,7 +146,6 @@ func uploadFileToVirusTotal(apiKey, filePath string) {
 		log.Fatalf("Could not open file for upload: %v", err)
 	}
 	defer file.Close()
-
 
 	part, err := writer.CreateFormFile("file", filePath)
 	if err != nil {
@@ -164,7 +163,6 @@ func uploadFileToVirusTotal(apiKey, filePath string) {
 	if err != nil {
 		log.Fatalf("writer.Close: %v", err)
 	}
-
 
 	req, err := http.NewRequest("POST", virusTotalBaseURL+virusTotalFileUploadEndpoint, &b)
 	if err != nil {
@@ -201,10 +199,6 @@ func uploadFileToVirusTotal(apiKey, filePath string) {
 	}
 	fmt.Println("File uploaded successfully. Fetching scan report...")
 	fetchVirusTotalReport(apiKey, fileID)
-
-
-	// fmt.Println("File uploaded successfully. VirusTotal scan results:")
-	// fmt.Printf("Upload Response: %v\n", result["data"])
 }
 
 func fetchVirusTotalReport(apiKey, fileID string) {
