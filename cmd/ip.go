@@ -140,8 +140,8 @@ var ipCmd = &cobra.Command{
 	Short: "Analyze an IP address for geolocation, ASN, and threat status",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		ip := args[0]
-		analyzeIP(ip)
+		input := args[0]
+		checkInput(input)
 	},
 }
 
