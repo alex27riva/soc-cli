@@ -8,7 +8,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"soc-cli/internal/apis"
@@ -55,17 +54,17 @@ func analyzeIP(ip net.IP) {
 
 	greyNoiseApiKey := viper.GetString("api_keys.greynoise.api_key")
 	if greyNoiseApiKey == "" {
-		log.Println("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
+		color.Red("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
 	}
 
 	ipInfoApiKey := viper.GetString("api_keys.ipinfo.api_key")
 	if ipInfoApiKey == "" {
-		log.Println("API key is missing! Please set the ipinfo api_key in config.yaml file")
+		color.Red("API key is missing! Please set the ipinfo api_key in config.yaml file")
 	}
 
 	abuseIPDBApiKey := viper.GetString("api_keys.abuseipdb.api_key")
 	if abuseIPDBApiKey == "" {
-		log.Println("API key is missing! Please set the abuseipdb api_key in config.yaml file")
+		color.Red("API key is missing! Please set the abuseipdb api_key in config.yaml file")
 	}
 
 	// Fetch IpInfo api
