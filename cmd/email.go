@@ -20,6 +20,15 @@ import (
 	"strings"
 )
 
+const (
+	emlExtension                = ".eml"
+	contentTypeHeader           = "Content-Type"
+	transferEncodingHeader      = "Content-Transfer-Encoding"
+	receivedSPFHeader           = "Received-SPF"
+	dkimSignatureHeader         = "DKIM-Signature"
+	authenticationResultsHeader = "Authentication-Results"
+)
+
 var analyzeEmailCmd = &cobra.Command{
 	Use:   "email [file]",
 	Short: "Analyze an email in .eml format for attachments and links",
@@ -36,7 +45,7 @@ func init() {
 
 // analyzeEmail processes the .eml file and extracts attachments and links
 func analyzeEmail(filePath string) {
-	if !strings.HasSuffix(strings.ToLower(filePath), ".eml") {
+	if !strings.HasSuffix(strings.ToLower(filePath), emlExtension) {
 		color.Red("The provided file is not an .eml file.")
 		return
 
@@ -54,39 +63,24 @@ func analyzeEmail(filePath string) {
 		fmt.Println("Error parsing .eml file:", err)
 		return
 	}
-	color.Blue("Main information:")
-	fmt.Println("From:", msg.Header.Get("From"))
-	fmt.Println("To:", msg.Header.Get("To"))
-	fmt.Println("Subject:", msg.Header.Get("Subject"))
-	fmt.Println("Date:", msg.Header.Get("Date"))
-	fmt.Println("Return-Path:", msg.Header.Get("Return-Path"))
+
+	printEmailHeaders(msg)
 
 	// Check for SPF information
-	spfHeader := msg.Header.Get("Received-SPF")
-	if spfHeader != "" {
-		fmt.Println(color.BlueString("\nSPF Information:\n"), spfHeader)
-	} else {
-		fmt.Println(color.BlueString("\nSPF Information:\n") + "No Received-SPF header found.")
-	}
+	printHeaderInfo(msg.Header.Get(receivedSPFHeader), "SPF Information")
 
 	// Extract DKIM Information
-	dkimHeader := msg.Header.Get("DKIM-Signature")
-	if dkimHeader != "" {
-		color.Blue("\nDKIM Information:")
-		fmt.Println(dkimHeader)
-	} else {
-		fmt.Println(color.BlueString("\nDKIM Information:\n") + "No DKIM-Signature header found.")
-	}
+	printHeaderInfo(msg.Header.Get(dkimSignatureHeader), "DKIM Information")
 
 	// Extract DMARC Information from Authentication-Results header
-	authResults := msg.Header.Get("Authentication-Results")
+	authResults := msg.Header.Get(authenticationResultsHeader)
 	if authResults != "" {
 		extractDMARCDKIM(authResults)
 	} else {
 		fmt.Println("\nDMARC Information: No Authentication-Results header found.")
 	}
 
-	mediaType, params, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
+	mediaType, params, err := mime.ParseMediaType(msg.Header.Get(contentTypeHeader))
 	if err != nil {
 		fmt.Println("Error parsing content type:", err)
 		return
@@ -100,7 +94,7 @@ func analyzeEmail(filePath string) {
 		// Handle single-part emails (just extract links)
 		body, _ := io.ReadAll(msg.Body)
 		// Check for Content-Transfer-Encoding
-		encoding := msg.Header.Get("Content-Transfer-Encoding")
+		encoding := msg.Header.Get(transferEncodingHeader)
 		if strings.ToLower(encoding) == "quoted-printable" {
 			// Decode quoted-printable content
 			reader := quotedprintable.NewReader(strings.NewReader(string(body)))
@@ -128,7 +122,7 @@ func processMultipart(mr *multipart.Reader) {
 			return
 		}
 
-		contentType := part.Header.Get("Content-Type")
+		contentType := part.Header.Get(contentTypeHeader)
 		disposition := part.Header.Get("Content-Disposition")
 
 		// If it's an attachment, list it
@@ -181,5 +175,22 @@ func extractLinks(body string) {
 		}
 	} else {
 		color.Blue("\nNo links found in the email.")
+	}
+}
+
+func printEmailHeaders(msg *mail.Message) {
+	color.Blue("Main information:")
+	fmt.Println("From:", msg.Header.Get("From"))
+	fmt.Println("To:", msg.Header.Get("To"))
+	fmt.Println("Subject:", msg.Header.Get("Subject"))
+	fmt.Println("Date:", msg.Header.Get("Date"))
+	fmt.Println("Return-Path:", msg.Header.Get("Return-Path"))
+}
+
+func printHeaderInfo(headerValue, headerName string) {
+	if headerValue != "" {
+		fmt.Println(color.BlueString("\n%s:\n", headerName), headerValue)
+	} else {
+		fmt.Println(color.BlueString("\n%s:\n", headerName) + "No information found.")
 	}
 }
