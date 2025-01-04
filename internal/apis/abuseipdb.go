@@ -15,7 +15,7 @@ import (
 
 const abuseAPIURL = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90&verbose"
 
-type abuseIPDBResponse struct {
+type AbuseIPDBResponse struct {
 	Data struct {
 		IPAddress            string   `json:"ipAddress"`
 		IsPublic             bool     `json:"isPublic"`
@@ -39,7 +39,7 @@ type abuseIPDBResponse struct {
 }
 
 // getAbuseIPDBInfo fetches data from AbuseIPDB for a specific IP address
-func GetAbuseIPDBInfo(ip net.IP, apiKey string) *abuseIPDBResponse {
+func GetAbuseIPDBInfo(ip net.IP, apiKey string) *AbuseIPDBResponse {
 	apiUrl := fmt.Sprintf(abuseAPIURL, ip.String())
 
 	headers := map[string]string{
@@ -47,7 +47,7 @@ func GetAbuseIPDBInfo(ip net.IP, apiKey string) *abuseIPDBResponse {
 		"Accept": "application/json",
 	}
 
-	var data abuseIPDBResponse
+	var data AbuseIPDBResponse
 
 	_, err := util.MakeGETRequest(apiUrl, headers, &data)
 	if err != nil {

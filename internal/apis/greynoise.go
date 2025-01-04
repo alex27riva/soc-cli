@@ -15,7 +15,7 @@ import (
 
 const greyNoiseAPIURL = "https://api.greynoise.io/v3/community/%s"
 
-type greyNoiseInfo struct {
+type GreyNoiseInfo struct {
 	IP             string `json:"ip"`
 	Noise          bool   `json:"noise"`
 	Riot           bool   `json:"riot"`
@@ -25,14 +25,14 @@ type greyNoiseInfo struct {
 }
 
 // Get threat intelligence from GreyNoise API
-func GetGreyNoiseData(ip net.IP, apiKey string) *greyNoiseInfo {
+func GetGreyNoiseData(ip net.IP, apiKey string) *GreyNoiseInfo {
 	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip.String())
 
 	headers := map[string]string{
 		"key": apiKey,
 	}
 
-	var greyNoiseData greyNoiseInfo
+	var greyNoiseData GreyNoiseInfo
 
 	_, err := util.MakeGETRequest(apiUrl, headers, &greyNoiseData)
 	if err != nil {

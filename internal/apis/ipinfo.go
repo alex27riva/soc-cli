@@ -15,17 +15,17 @@ import (
 
 const ipInfoAPIURL = "https://ipinfo.io/%s?token=%s"
 
-type ipInfo struct {
+type IPInfo struct {
 	IP       string `json:"ip"`
 	Country  string `json:"country"`
 	Hostname string `json:"hostname"`
 	Org      string `json:"org"`
 }
 
-func GetIPInfo(ip net.IP, apiKey string) *ipInfo {
+func GetIPInfo(ip net.IP, apiKey string) *IPInfo {
 	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip.String(), apiKey)
 
-	var info ipInfo
+	var info IPInfo
 
 	_, err := util.MakeGETRequest(apiUrl, nil, &info)
 	if err != nil {
