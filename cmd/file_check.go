@@ -61,8 +61,9 @@ func checkFileOnVirusTotal(filePath string) {
 	fmt.Printf("File SHA256: %s\n", hash)
 
 	// Check if file already exists in VirusTotal
-	if fileExistsInVirusTotal(apiKey, hash) {
+	if exist, report := fileExistsInVirusTotal(apiKey, hash); exist {
 		color.Green("File already analyzed on VirusTotal.")
+		displayVirusTotalReport(report)
 
 	} else {
 		// Ask for confirmation before uploading
@@ -77,7 +78,7 @@ func checkFileOnVirusTotal(filePath string) {
 
 func confirmUpload() bool {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("File not found on VirusTotal. Do you want to upload it for analysis? (y/n): ")
+	fmt.Print("File not found on VirusTotal. Do you want to upload it for analysis? (y/N): ")
 	response, err := reader.ReadString('\n')
 	if err != nil {
 		log.Fatalf("Error reading input: %v", err)
@@ -101,7 +102,7 @@ func calculateSHA256(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-func fileExistsInVirusTotal(apiKey, hash string) bool {
+func fileExistsInVirusTotal(apiKey, hash string) (exist bool, report apis.VTResponse) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", virusTotalBaseURL+virusTotalFileReportEndpoint+hash, nil)
 	if err != nil {
@@ -117,7 +118,7 @@ func fileExistsInVirusTotal(apiKey, hash string) bool {
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return false // File not found on VirusTotal
+		return false, apis.VTResponse{} // File not found on VirusTotal
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -129,14 +130,11 @@ func fileExistsInVirusTotal(apiKey, hash string) bool {
 		log.Fatalf("Error reading response body: %v", err)
 	}
 
-	var result apis.VTResponse
-	if err := json.Unmarshal(body, &result); err != nil {
+	if err := json.Unmarshal(body, &report); err != nil {
 		log.Fatalf("Error parsing JSON response: %v", err)
 	}
 
-	displayVirusTotalReport(result)
-
-	return true
+	return true, report
 }
 
 func uploadFileToVirusTotal(apiKey, filePath string) {
