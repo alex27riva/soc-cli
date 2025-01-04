@@ -13,6 +13,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"io"
@@ -20,6 +21,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"soc-cli/internal/apis"
 	"strings"
 	"time"
 )
@@ -46,19 +48,21 @@ func init() {
 func checkFileOnVirusTotal(filePath string) {
 	apiKey := viper.GetString("api_keys.virustotal.api_key")
 	if apiKey == "" {
-		log.Fatal("VirusTotal API key missing! Please set it in the config file.")
+		color.Red("VirusTotal API key missing! Please set it in the config file.")
+		os.Exit(1)
 	}
 
 	hash, err := calculateSHA256(filePath)
 	if err != nil {
-		log.Fatalf("Error calculating file hash: %v", err)
+		color.Red("Error calculating file hash: %v", err)
+		os.Exit(1)
 	}
 
 	fmt.Printf("File SHA256: %s\n", hash)
 
 	// Check if file already exists in VirusTotal
 	if fileExistsInVirusTotal(apiKey, hash) {
-		fmt.Println("File already analyzed on VirusTotal.")
+		color.Green("File already analyzed on VirusTotal.")
 
 	} else {
 		// Ask for confirmation before uploading
@@ -125,7 +129,7 @@ func fileExistsInVirusTotal(apiKey, hash string) bool {
 		log.Fatalf("Error reading response body: %v", err)
 	}
 
-	var result map[string]interface{}
+	var result apis.VTResponse
 	if err := json.Unmarshal(body, &result); err != nil {
 		log.Fatalf("Error parsing JSON response: %v", err)
 	}
@@ -234,42 +238,27 @@ func fetchVirusTotalReport(apiKey, fileID string) {
 			log.Fatalf("Error reading response body: %v", err)
 		}
 
-		var result map[string]interface{}
+		var result apis.VTResponse
 		if err := json.Unmarshal(body, &result); err != nil {
 			log.Fatalf("Error parsing JSON response: %v", err)
 		}
 		displayVirusTotalReport(result)
 		fmt.Println("VirusTotal Scan Report:")
-		fmt.Printf("%v\n", result["data"])
 		return
 	}
 
-	fmt.Println("Report could not be retrieved within the timeout period.")
+	color.Red("Report could not be retrieved within the timeout period.")
 }
 
-func displayVirusTotalReport(report map[string]interface{}) {
-	data, ok := report["data"].(map[string]interface{})
-	if !ok {
-		log.Fatalf("Malformed report response")
-	}
+func displayVirusTotalReport(report apis.VTResponse) {
 
-	attributes, ok := data["attributes"].(map[string]interface{})
-	if !ok {
-		log.Fatalf("Report attributes not found")
-	}
+	color.Blue("VirusTotal Scan Report:")
 
-	fmt.Println("VirusTotal Scan Report:")
-	fmt.Printf("Resource: %s\n", data["id"])
-	fmt.Printf("Last Analysis Stats: %v\n", attributes["last_analysis_stats"])
-	fmt.Println("Antivirus Results:")
-
-	results, ok := attributes["last_analysis_results"].(map[string]interface{})
-	if !ok {
-		log.Fatalf("Analysis results not found")
-	}
-
-	for av, details := range results {
-		detailMap := details.(map[string]interface{})
-		fmt.Printf("- %s: %s\n", av, detailMap["result"])
-	}
+	fmt.Printf("\nType: %s\n", report.Data.Type)
+	fmt.Printf("Magic: %v\n", report.Data.Attributes.Magic)
+	fmt.Printf("Self Link: %s\n", report.Data.Links.Self)
+	fmt.Printf("Reputation: %d\n", report.Data.Attributes.Reputation)
+	fmt.Printf("Meaningful Name: %s\n", report.Data.Attributes.MeaningfulName)
+	fmt.Printf("Analysis result: malicious %v, undetected %v, harmless %v\n", report.Data.Attributes.LastAnalysisStats.Malicious, report.Data.Attributes.LastAnalysisStats.Suspicious, report.Data.Attributes.LastAnalysisStats.Harmless)
+	fmt.Printf("SHA256: %s\n", report.Data.Attributes.Sha256)
 }
