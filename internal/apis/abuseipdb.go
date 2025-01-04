@@ -49,7 +49,7 @@ func GetAbuseIPDBInfo(ip net.IP, apiKey string) *abuseIPDBResponse {
 
 	var data abuseIPDBResponse
 
-	err := util.MakeGETRequest(apiUrl, headers, &data)
+	_, err := util.MakeGETRequest(apiUrl, headers, &data)
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}

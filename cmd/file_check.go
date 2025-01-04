@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"soc-cli/internal/apis"
+	"soc-cli/internal/util"
 	"strings"
 	"time"
 )
@@ -103,35 +104,19 @@ func calculateSHA256(filePath string) (string, error) {
 }
 
 func fileExistsInVirusTotal(apiKey, hash string) (exist bool, report apis.VTResponse) {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", virusTotalBaseURL+virusTotalFileReportEndpoint+hash, nil)
-	if err != nil {
-		log.Fatalf("Error creating request: %v", err)
-	}
-	req.Header.Set("x-apikey", apiKey)
-	req.Header.Add("accept", "application/json")
 
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Fatalf("Error making request: %v", err)
+	headers := map[string]string{
+		"X-Apikey": apiKey,
+		"Accept":   "application/json",
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusNotFound {
+	statusCode, err := util.MakeGETRequest(virusTotalBaseURL+virusTotalFileReportEndpoint+hash, headers, &report)
+	if err != nil {
+		log.Fatalf("Error fetching VirusTotal: %v", err)
+	}
+
+	if statusCode == http.StatusNotFound {
 		return false, apis.VTResponse{} // File not found on VirusTotal
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Unexpected response from VirusTotal: %v", resp)
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		log.Fatalf("Error reading response body: %v", err)
-	}
-
-	if err := json.Unmarshal(body, &report); err != nil {
-		log.Fatalf("Error parsing JSON response: %v", err)
 	}
 
 	return true, report
@@ -258,5 +243,4 @@ func displayVirusTotalReport(report apis.VTResponse) {
 	fmt.Printf("Reputation: %d\n", report.Data.Attributes.Reputation)
 	fmt.Printf("Meaningful Name: %s\n", report.Data.Attributes.MeaningfulName)
 	fmt.Printf("Analysis result: malicious %v, undetected %v, harmless %v\n", report.Data.Attributes.LastAnalysisStats.Malicious, report.Data.Attributes.LastAnalysisStats.Suspicious, report.Data.Attributes.LastAnalysisStats.Harmless)
-	fmt.Printf("SHA256: %s\n", report.Data.Attributes.Sha256)
 }

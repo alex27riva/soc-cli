@@ -26,10 +26,10 @@ func init() {
 	}
 }
 
-func MakeGETRequest(url string, headers map[string]string, target interface{}) error {
+func MakeGETRequest(url string, headers map[string]string, target interface{}) (sc int, err error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return fmt.Errorf("error creating request: %w", err)
+		return 0, fmt.Errorf("error creating request: %w", err)
 	}
 
 	for key, value := range headers {
@@ -47,13 +47,13 @@ func MakeGETRequest(url string, headers map[string]string, target interface{}) e
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error making request: %w", err)
+		return resp.StatusCode, fmt.Errorf("error making request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("error reading response body: %w", err)
+		return resp.StatusCode, fmt.Errorf("error reading response body: %w", err)
 	}
 
 	if debug {
@@ -62,10 +62,10 @@ func MakeGETRequest(url string, headers map[string]string, target interface{}) e
 
 	err = json.Unmarshal(body, target)
 	if err != nil {
-		return fmt.Errorf("error unmarshalling JSON response: %w", err)
+		return resp.StatusCode, fmt.Errorf("error unmarshalling JSON response: %w", err)
 	}
 
-	return nil
+	return resp.StatusCode, nil
 }
 
 func MakePOSTRequest(url string, headers map[string]string, body interface{}, target interface{}) error {
