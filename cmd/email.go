@@ -13,6 +13,7 @@ import (
 	"io"
 	"mime"
 	"mime/multipart"
+	"mime/quotedprintable"
 	"net/mail"
 	"os"
 	"soc-cli/internal/util"
@@ -35,6 +36,11 @@ func init() {
 
 // analyzeEmail processes the .eml file and extracts attachments and links
 func analyzeEmail(filePath string) {
+	if !strings.HasSuffix(strings.ToLower(filePath), ".eml") {
+		color.Red("The provided file is not an .eml file.")
+		return
+
+	}
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -93,7 +99,20 @@ func analyzeEmail(filePath string) {
 	} else {
 		// Handle single-part emails (just extract links)
 		body, _ := io.ReadAll(msg.Body)
-		extractLinks(string(body))
+		// Check for Content-Transfer-Encoding
+		encoding := msg.Header.Get("Content-Transfer-Encoding")
+		if strings.ToLower(encoding) == "quoted-printable" {
+			// Decode quoted-printable content
+			reader := quotedprintable.NewReader(strings.NewReader(string(body)))
+			decodedBody, err := io.ReadAll(reader)
+			if err != nil {
+				fmt.Println("Error decoding quoted-printable content:", err)
+				return
+			}
+			extractLinks(string(decodedBody))
+		} else {
+			extractLinks(string(body))
+		}
 	}
 }
 
