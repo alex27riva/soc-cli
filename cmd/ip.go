@@ -7,7 +7,6 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
@@ -24,9 +23,9 @@ import (
 const (
 	reportLimit         = 3
 	defaultReportMaxLen = 100
-	greyNoiseAPIKeyMsg  = "GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file"
-	ipInfoAPIKeyMsg     = "API key is missing! Please set the ipinfo api_key in config.yaml file"
-	abuseIPDBAPIKeyMsg  = "API key is missing! Please set the abuseipdb api_key in config.yaml file"
+	greyNoiseAPIKeyMsg  = "GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file."
+	ipInfoAPIKeyMsg     = "IPInfo API key is missing! Please set the ipinfo api_key in config.yaml file."
+	abuseIPDBAPIKeyMsg  = "AbuseIPDB API key is missing! Please set the abuseipdb api_key in config.yaml file."
 )
 
 var reportMaxLen int
@@ -54,34 +53,43 @@ func checkInput(input string) error {
 	return nil
 }
 
-func checkAPIKeys() error {
+func checkAPIKeys() []string {
+	var missingKeys []string
 	if viper.GetString("api_keys.greynoise.api_key") == "" {
-		return errors.New(greyNoiseAPIKeyMsg)
+		missingKeys = append(missingKeys, greyNoiseAPIKeyMsg)
 	}
 	if viper.GetString("api_keys.ipinfo.api_key") == "" {
-		return errors.New(ipInfoAPIKeyMsg)
+		missingKeys = append(missingKeys, ipInfoAPIKeyMsg)
 	}
 	if viper.GetString("api_keys.abuseipdb.api_key") == "" {
-		return errors.New(abuseIPDBAPIKeyMsg)
+		missingKeys = append(missingKeys, abuseIPDBAPIKeyMsg)
 	}
-	return nil
+	return missingKeys
 }
 
 func analyzeIP(ip net.IP) {
-
-	if err := checkAPIKeys(); err != nil {
-		color.Red(err.Error())
-		os.Exit(1)
+	missingKeys := checkAPIKeys()
+	if len(missingKeys) > 0 {
+		for _, msg := range missingKeys {
+			color.Yellow(msg)
+		}
 	}
 
 	// Fetch IP information
-	ipInfoData := apis.GetIPInfo(ip, viper.GetString("api_keys.ipinfo.api_key"))
-	greyNoiseData := apis.GetGreyNoiseData(ip, viper.GetString("api_keys.greynoise.api_key"))
-	abuseIPDBData := apis.GetAbuseIPDBInfo(ip, viper.GetString("api_keys.abuseipdb.api_key"))
+	if viper.GetString("api_keys.ipinfo.api_key") != "" {
+		ipInfoData := apis.GetIPInfo(ip, viper.GetString("api_keys.ipinfo.api_key"))
+		printIPInfo(ipInfoData)
+	}
 
-	printIPInfo(ipInfoData)
-	printGreyNoiseData(greyNoiseData)
-	printAbuseIPDBData(abuseIPDBData)
+	if viper.GetString("api_keys.greynoise.api_key") != "" {
+		greyNoiseData := apis.GetGreyNoiseData(ip, viper.GetString("api_keys.greynoise.api_key"))
+		printGreyNoiseData(greyNoiseData)
+	}
+
+	if viper.GetString("api_keys.abuseipdb.api_key") != "" {
+		abuseIPDBData := apis.GetAbuseIPDBInfo(ip, viper.GetString("api_keys.abuseipdb.api_key"))
+		printAbuseIPDBData(abuseIPDBData)
+	}
 
 }
 
