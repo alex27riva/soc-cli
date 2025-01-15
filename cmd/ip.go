@@ -167,6 +167,6 @@ var ipCmd = &cobra.Command{
 }
 
 func init() {
-	ipCmd.Flags().IntVarP(&reportMaxLen, "length", "l", 50, "AbuseIPDB report max length")
+	ipCmd.Flags().IntVarP(&reportMaxLen, "length", "l", defaultReportMaxLen, "AbuseIPDB report max length")
 	rootCmd.AddCommand(ipCmd)
 }
