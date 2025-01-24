@@ -31,6 +31,7 @@ type urlScanResult struct {
 		Domain  string `json:"domain"`
 		Country string `json:"country"`
 		IP      string `json:"ip"`
+		Title   string `json:"title"`
 	} `json:"page"`
 	Task struct {
 		ReportURL string `json:"reportURL"`
@@ -102,8 +103,9 @@ func fetchURLScanResult(scanID string) (*urlScanResult, error) {
 func displayResults(scanResult urlScanResult) {
 	fmt.Printf("Scan Results for URL: %s\n", scanResult.Page.URL)
 	fmt.Printf("Domain: %s\n", scanResult.Page.Domain)
-	fmt.Printf("Country: %s\n", scanResult.Page.Country)
+	fmt.Printf("Title: %s\n", scanResult.Page.Title)
 	fmt.Printf("IP: %s\n", scanResult.Page.IP)
+	fmt.Printf("Country: %s\n", scanResult.Page.Country)
 	fmt.Printf("Link: %s\n", scanResult.Task.ReportURL)
 	if scanResult.Verdict.Malicious {
 		fmt.Println("Verdict: " + color.RedString("MALICIOUS"))
