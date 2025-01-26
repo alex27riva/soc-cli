@@ -28,6 +28,7 @@ import (
 )
 
 const virusTotalBaseURL = "https://www.virustotal.com/api/v3"
+const virusTotalFileGuiURL = "https://www.virustotal.com/gui/file/%s"
 const virusTotalFileReportEndpoint = "/files/"
 const virusTotalFileUploadEndpoint = "/files"
 
@@ -234,13 +235,14 @@ func fetchVirusTotalReport(apiKey, fileID string) {
 }
 
 func displayVirusTotalReport(report apis.VTResponse) {
+	scanUrl := fmt.Sprintf(virusTotalFileGuiURL, report.Data.Attributes.Sha256)
 
 	color.Blue("VirusTotal Scan Report:")
 
 	fmt.Printf("\nType: %s\n", report.Data.Type)
-	fmt.Printf("Magic: %v\n", report.Data.Attributes.Magic)
-	fmt.Printf("Self Link: %s\n", report.Data.Links.Self)
-	fmt.Printf("Reputation: %d\n", report.Data.Attributes.Reputation)
 	fmt.Printf("Meaningful Name: %s\n", report.Data.Attributes.MeaningfulName)
+	fmt.Printf("Magic: %v\n", report.Data.Attributes.Magic)
+	fmt.Printf("Reputation: %d\n", report.Data.Attributes.Reputation)
+	fmt.Printf("Link: %s\n", scanUrl)
 	fmt.Printf("Analysis result: malicious %v, undetected %v, harmless %v\n", report.Data.Attributes.LastAnalysisStats.Malicious, report.Data.Attributes.LastAnalysisStats.Suspicious, report.Data.Attributes.LastAnalysisStats.Harmless)
 }
