@@ -103,7 +103,9 @@ func fetchURLScanResult(scanID string) (*urlScanResult, error) {
 func displayResults(scanResult urlScanResult) {
 	fmt.Printf("Scan Results for URL: %s\n", scanResult.Page.URL)
 	fmt.Printf("Domain: %s\n", scanResult.Page.Domain)
-	fmt.Printf("Title: %s\n", scanResult.Page.Title)
+	if title := scanResult.Page.Title; title != "" {
+		fmt.Printf("Title: %s\n", title)
+	}
 	fmt.Printf("IP: %s\n", scanResult.Page.IP)
 	fmt.Printf("Country: %s\n", scanResult.Page.Country)
 	fmt.Printf("Link: %s\n", scanResult.Task.ReportURL)
@@ -128,7 +130,8 @@ var urlScanCmd = &cobra.Command{
 			log.Fatalf("Error submitting URL for scan: %v", err)
 		}
 
-		color.Blue("URL submitted successfully. Awaiting results...")
+		color.Green("URL submitted successfully.")
+		color.Blue("Awaiting results...")
 
 		// Fetch the scan results
 		scanResult, err := fetchURLScanResult(scanID)
