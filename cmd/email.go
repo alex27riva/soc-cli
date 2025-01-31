@@ -206,13 +206,22 @@ func handleError(err error, message string) {
 	}
 }
 
+func printHeader(headerName, headerValue string) {
+	if headerValue != "" {
+		fmt.Printf("%s: %s\n", color.CyanString(headerName), headerValue)
+	}
+}
+
 func printEmailHeaders(msg *mail.Message) {
 	color.Blue("Main information:")
-	fmt.Println("From:", msg.Header.Get("From"))
-	fmt.Println("To:", msg.Header.Get("To"))
-	fmt.Println("Subject:", msg.Header.Get("Subject"))
-	fmt.Println("Date:", msg.Header.Get("Date"))
-	fmt.Println("Return-Path:", msg.Header.Get("Return-Path"))
+	printHeader("From", msg.Header.Get("From"))
+	printHeader("To", msg.Header.Get("To"))
+	printHeader("Cc", msg.Header.Get("Cc"))
+	printHeader("Bcc", msg.Header.Get("Bcc"))
+	printHeader("Subject", msg.Header.Get("Subject"))
+	printHeader("Date", msg.Header.Get("Date"))
+	printHeader("Reply-To", msg.Header.Get("Reply-To"))
+	printHeader("Return-Path", msg.Header.Get("Return-Path"))
 }
 
 func printHeaderInfo(headerValue, headerName string) {
