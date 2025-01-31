@@ -14,11 +14,13 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"net/http"
+	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
 	"time"
 )
 
 var defautVisibility = "private" // public, unlisted or private
+var defangFlag bool
 
 const (
 	urlscanScanApi   = "https://urlscan.io/api/v1/scan/"
@@ -101,15 +103,23 @@ func fetchURLScanResult(scanID string) (*urlScanResult, error) {
 }
 
 func displayResults(scanResult urlScanResult) {
+	isMalicious := scanResult.Verdict.Malicious
+	domain := scanResult.Page.Domain
+
 	fmt.Printf("Scan Results for URL: %s\n", scanResult.Page.URL)
-	fmt.Printf("Domain: %s\n", scanResult.Page.Domain)
+
+	if isMalicious || defangFlag {
+		domain = logic.DefangURL(domain)
+	}
+	fmt.Printf("Domain: %s\n", domain)
+
 	if title := scanResult.Page.Title; title != "" {
 		fmt.Printf("Title: %s\n", title)
 	}
 	fmt.Printf("IP: %s\n", scanResult.Page.IP)
 	fmt.Printf("Country: %s\n", scanResult.Page.Country)
 	fmt.Printf("Link: %s\n", scanResult.Task.ReportURL)
-	if scanResult.Verdict.Malicious {
+	if isMalicious {
 		fmt.Println("Verdict: " + color.RedString("MALICIOUS"))
 	} else {
 		fmt.Println("Verdict: " + color.GreenString("SAFE"))
@@ -144,5 +154,6 @@ var urlScanCmd = &cobra.Command{
 }
 
 func init() {
+	urlScanCmd.Flags().BoolVar(&defangFlag, "defang", false, "Defang the URL")
 	rootCmd.AddCommand(urlScanCmd)
 }
