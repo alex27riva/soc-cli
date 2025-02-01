@@ -96,25 +96,11 @@ func analyzeIP(ip net.IP) {
 
 func printIPInfo(ipInfoData *apis.IPInfo) {
 	color.Blue("IP information from IPInfo")
-	printEntry("IP", ipInfoData.IP)
-	printEntry("Hostname", ipInfoData.Hostname)
-	printEntry("Org", ipInfoData.Org)
-	printEntry("Country", ipInfoData.Country)
+	util.PrintEntry("IP", ipInfoData.IP)
+	util.PrintEntry("Hostname", ipInfoData.Hostname)
+	util.PrintEntry("Org", ipInfoData.Org)
+	util.PrintEntry("Country", ipInfoData.Country)
 
-}
-
-func printEntry(entryName, entryValue string) {
-	if entryValue == "" {
-		return
-	}
-	fmt.Printf("%s: %s\n", color.CyanString(entryName), entryValue)
-}
-
-func printYesNo(val bool) string {
-	if val {
-		return color.GreenString("YES")
-	}
-	return color.RedString("NO")
 }
 
 func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
@@ -129,11 +115,11 @@ func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 			classification = color.GreenString(classification)
 		}
 
-		printEntry("Noise", printYesNo(greyNoiseData.Noise))
-		printEntry("Riot", printYesNo(greyNoiseData.Riot))
-		printEntry("Classification", classification)
-		printEntry("Message", greyNoiseData.Message)
-		printEntry("Link", greyNoiseData.Link)
+		util.PrintEntry("Noise", util.PrintYesNo(greyNoiseData.Noise))
+		util.PrintEntry("Riot", util.PrintYesNo(greyNoiseData.Riot))
+		util.PrintEntry("Classification", classification)
+		util.PrintEntry("Message", greyNoiseData.Message)
+		util.PrintEntry("Link", greyNoiseData.Link)
 	}
 }
 
@@ -148,9 +134,9 @@ func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 		lastReportDate, _ := time.Parse(time.RFC3339, abuseIPDBData.Data.LastReportedAt)
 
 		// Print AbuseIPDB info
-		printEntry("Abuse Confidence Score", strconv.Itoa(abuseIPDBData.Data.AbuseConfidenceScore))
-		printEntry("Abuse Confidence Score", strconv.Itoa(abuseIPDBData.Data.TotalReports))
-		printEntry("Last Reported At", lastReportDate.Format("Monday, January 2, 2006"))
+		util.PrintEntry("Abuse Confidence Score", strconv.Itoa(abuseIPDBData.Data.AbuseConfidenceScore))
+		util.PrintEntry("Abuse Confidence Score", strconv.Itoa(abuseIPDBData.Data.TotalReports))
+		util.PrintEntry("Last Reported At", lastReportDate.Format("Monday, January 2, 2006"))
 
 		// Print the individual reports if available
 		if len(abuseIPDBData.Data.Reports) > 0 {
