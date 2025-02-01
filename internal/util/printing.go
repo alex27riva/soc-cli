@@ -8,7 +8,7 @@ package util
 
 import (
 	"fmt"
-	"github.com/fatih/color" // Make sure to import the color package
+	"github.com/fatih/color"
 )
 
 func PrintEntry(entryName string, entryValue interface{}) {

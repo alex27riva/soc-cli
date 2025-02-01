@@ -105,24 +105,26 @@ func fetchURLScanResult(scanID string) (*urlScanResult, error) {
 func displayResults(scanResult urlScanResult) {
 	isMalicious := scanResult.Verdict.Malicious
 	domain := scanResult.Page.Domain
-
-	fmt.Printf("Scan Results for URL: %s\n", scanResult.Page.URL)
+	scannedUrl := scanResult.Page.URL
 
 	if isMalicious || defangFlag {
+
+		scannedUrl = logic.DefangURL(scannedUrl)
 		domain = logic.DefangURL(domain)
 	}
-	fmt.Printf("Domain: %s\n", domain)
 
-	if title := scanResult.Page.Title; title != "" {
-		fmt.Printf("Title: %s\n", title)
-	}
-	fmt.Printf("IP: %s\n", scanResult.Page.IP)
-	fmt.Printf("Country: %s\n", scanResult.Page.Country)
-	fmt.Printf("Link: %s\n", scanResult.Task.ReportURL)
+	util.PrintEntry("Scan Results for URL", scannedUrl)
+	util.PrintEntry("Domain", domain)
+
+	util.PrintEntry("Title", scanResult.Page.Title)
+
+	util.PrintEntry("IP", scanResult.Page.IP)
+	util.PrintEntry("Country", scanResult.Page.Country)
+	util.PrintEntry("Link", scanResult.Task.ReportURL)
 	if isMalicious {
-		fmt.Println("Verdict: " + color.RedString("MALICIOUS"))
+		util.PrintEntry("Verdict", color.RedString("MALICIOUS"))
 	} else {
-		fmt.Println("Verdict: " + color.GreenString("SAFE"))
+		util.PrintEntry("Verdict", color.GreenString("SAFE"))
 	}
 
 }
