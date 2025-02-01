@@ -20,8 +20,9 @@ type GreyNoiseInfo struct {
 	Noise          bool   `json:"noise"`
 	Riot           bool   `json:"riot"`
 	Classification string `json:"classification"`
-	Name           string `json:"name"`
 	Link           string `json:"link"`
+	LastSeen       string `json:"last_seen"`
+	Message       string `json:"message"`
 }
 
 // Get threat intelligence from GreyNoise API
