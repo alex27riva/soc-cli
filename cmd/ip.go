@@ -104,11 +104,12 @@ func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 	if greyNoiseData != nil {
 		color.Blue("\nGreyNoise Threat Intelligence")
 
-		classification := greyNoiseData.Classification
-		if classification == "malicious" {
-			classification = color.RedString(strings.ToUpper(classification))
-		} else if classification == "benign" {
-			classification = color.GreenString(strings.ToUpper(classification))
+		classification := strings.ToUpper(greyNoiseData.Classification)
+		switch classification {
+		case "MALICIOUS":
+			classification = color.RedString(classification)
+		case "BENIGN":
+			classification = color.GreenString(classification)
 		}
 
 		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",
