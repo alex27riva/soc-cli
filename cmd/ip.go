@@ -22,14 +22,15 @@ import (
 )
 
 const (
-	reportLimit         = 3
-	defaultReportMaxLen = 100
-	greyNoiseAPIKeyMsg  = "GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file."
-	ipInfoAPIKeyMsg     = "IPInfo API key is missing! Please set the ipinfo api_key in config.yaml file."
-	abuseIPDBAPIKeyMsg  = "AbuseIPDB API key is missing! Please set the abuseipdb api_key in config.yaml file."
+	defaultReportEntries = 3
+	defaultReportMaxLen  = 100
+	greyNoiseAPIKeyMsg   = "GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file."
+	ipInfoAPIKeyMsg      = "IPInfo API key is missing! Please set the ipinfo api_key in config.yaml file."
+	abuseIPDBAPIKeyMsg   = "AbuseIPDB API key is missing! Please set the abuseipdb api_key in config.yaml file."
 )
 
 var reportMaxLen int
+var reportEntries int
 
 func checkInput(input string) error {
 	ip := net.ParseIP(input)
@@ -119,6 +120,7 @@ func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 		util.PrintEntry("Riot", util.PrintYesNo(greyNoiseData.Riot))
 		util.PrintEntry("Classification", classification)
 		util.PrintEntry("Message", greyNoiseData.Message)
+		util.PrintEntry("Last seen", greyNoiseData.LastSeen)
 		util.PrintEntry("Link", greyNoiseData.Link)
 	}
 }
@@ -147,12 +149,13 @@ func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 			tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
 			for index, report := range abuseIPDBData.Data.Reports {
-				if index > reportLimit {
+				if index >= reportEntries {
 					break
 				}
 				humanTime, _ := util.HumanReadableDate(report.ReportedAt)
 				tbl.AddRow(humanTime, report.ReporterCountry, util.ShortStr(report.Comment, reportMaxLen))
 			}
+			fmt.Println()
 			tbl.Print()
 
 		}
@@ -175,5 +178,6 @@ var ipCmd = &cobra.Command{
 
 func init() {
 	ipCmd.Flags().IntVarP(&reportMaxLen, "length", "l", defaultReportMaxLen, "AbuseIPDB report max length")
+	ipCmd.Flags().IntVarP(&reportEntries, "reports", "r", defaultReportEntries, "AbuseIPDB reports to show")
 	rootCmd.AddCommand(ipCmd)
 }
