@@ -16,7 +16,6 @@ import (
 	"os"
 	"soc-cli/internal/apis"
 	"soc-cli/internal/util"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -136,8 +135,8 @@ func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 		lastReportDate, _ := time.Parse(time.RFC3339, abuseIPDBData.Data.LastReportedAt)
 
 		// Print AbuseIPDB info
-		util.PrintEntry("Abuse Confidence Score", strconv.Itoa(abuseIPDBData.Data.AbuseConfidenceScore))
-		util.PrintEntry("Abuse Confidence Score", strconv.Itoa(abuseIPDBData.Data.TotalReports))
+		util.PrintEntry("Abuse Confidence Score", abuseIPDBData.Data.AbuseConfidenceScore)
+		util.PrintEntry("Total Reports", abuseIPDBData.Data.TotalReports)
 		util.PrintEntry("Last Reported At", lastReportDate.Format("Monday, January 2, 2006"))
 
 		// Print the individual reports if available
