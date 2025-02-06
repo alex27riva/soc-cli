@@ -27,7 +27,7 @@ func GetIPInfo(ip net.IP, apiKey string) *IPInfo {
 
 	var info IPInfo
 
-	_, err := util.MakeGETRequest(apiUrl, nil, &info)
+	_, err := util.HTTPGetJSON(apiUrl, nil, &info)
 	if err != nil {
 		log.Fatalf("Error fetching IP info: %v", err)
 	}

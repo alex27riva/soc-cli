@@ -111,7 +111,7 @@ func fileExistsInVirusTotal(apiKey, hash string) (exist bool, report apis.VTResp
 		"Accept":   "application/json",
 	}
 
-	statusCode, err := util.MakeGETRequest(virusTotalBaseURL+virusTotalFileReportEndpoint+hash, headers, &report)
+	statusCode, err := util.HTTPGetJSON(virusTotalBaseURL+virusTotalFileReportEndpoint+hash, headers, &report)
 	if err != nil {
 		log.Fatalf("Error fetching VirusTotal: %v", err)
 	}

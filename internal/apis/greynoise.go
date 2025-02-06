@@ -35,7 +35,7 @@ func GetGreyNoiseData(ip net.IP, apiKey string) *GreyNoiseInfo {
 
 	var greyNoiseData GreyNoiseInfo
 
-	_, err := util.MakeGETRequest(apiUrl, headers, &greyNoiseData)
+	_, err := util.HTTPGetJSON(apiUrl, headers, &greyNoiseData)
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}

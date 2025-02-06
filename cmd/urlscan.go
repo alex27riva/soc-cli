@@ -54,7 +54,7 @@ func submitURLScan(url string) (string, error) {
 
 	var result map[string]interface{}
 
-	err := util.MakePOSTRequest(urlscanScanApi, map[string]string{"API-Key": apiKey}, requestBody, &result)
+	err := util.HTTPPostJSON(urlscanScanApi, map[string]string{"API-Key": apiKey}, requestBody, &result)
 
 	if err != nil {
 		return "", fmt.Errorf("failed to submit URL scan request: %v", err)

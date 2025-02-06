@@ -26,7 +26,7 @@ func init() {
 	}
 }
 
-func MakeGETRequest(url string, headers map[string]string, target interface{}) (sc int, err error) {
+func HTTPGetJSON(url string, headers map[string]string, target interface{}) (sc int, err error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return 0, fmt.Errorf("error creating request: %w", err)
@@ -68,7 +68,7 @@ func MakeGETRequest(url string, headers map[string]string, target interface{}) (
 	return resp.StatusCode, nil
 }
 
-func MakePOSTRequest(url string, headers map[string]string, body interface{}, target interface{}) error {
+func HTTPPostJSON(url string, headers map[string]string, body interface{}, target interface{}) error {
 	// Marshal the body into JSON
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
