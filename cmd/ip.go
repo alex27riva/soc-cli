@@ -32,6 +32,9 @@ var reportMaxLen int
 var reportEntries int
 
 func checkInput(input string) error {
+	// Handle defanged IP
+	input = strings.ReplaceAll(input, "[.]", ".")
+
 	ip := net.ParseIP(input)
 	if ip == nil {
 		color.Red("Invalid IP address.")
