@@ -26,6 +26,31 @@ func init() {
 	}
 }
 
+func GetRaw(url string, headers map[string]string) (body []byte, err error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	return body, nil
+}
+
 func HTTPGetJSON(url string, headers map[string]string, target interface{}) (sc int, err error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
