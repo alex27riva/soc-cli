@@ -7,8 +7,12 @@ See the LICENSE file for details.
 package util
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/fatih/color"
+	"golang.org/x/term"
+	"os"
+	"strings"
 )
 
 func PrintEntry(entryName string, entryValue interface{}) {
@@ -33,4 +37,23 @@ func PrintYesNo(val bool) string {
 		return color.GreenString("YES")
 	}
 	return color.RedString("NO")
+}
+
+// getPromptedInput prompts the user for input if the standard input is not a pipe
+func GetPromptedInput(prompt string) string {
+	if !isInputFromPipe() {
+		fmt.Print(prompt)
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	in, err := reader.ReadString('\n')
+	if err != nil {
+		color.Red("Error reading input: %v", err)
+	}
+	return strings.TrimSpace(in)
+}
+
+// isInputFromPipe checks if the standard input is coming from a pipe
+func isInputFromPipe() bool {
+	return !term.IsTerminal(int(os.Stdin.Fd()))
 }
