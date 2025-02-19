@@ -112,10 +112,12 @@ func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 
 		classification := strings.ToUpper(greyNoiseData.Classification)
 		switch classification {
-		case "MALICIOUS":
-			classification = color.RedString(classification)
 		case "BENIGN":
 			classification = color.GreenString(classification)
+		case "MALICIOUS":
+			classification = color.RedString(classification)
+		case "SUSPICIOUS":
+			classification = color.YellowString(classification)
 		}
 
 		util.PrintEntry("Noise", util.PrintYesNo(greyNoiseData.Noise))
