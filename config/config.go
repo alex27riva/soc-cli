@@ -8,48 +8,18 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
+
+	"log/slog"
+
+	"github.com/fatih/color"
+
+	"github.com/spf13/viper"
 )
 
-const configTemplate = `api_keys:
-  urlscan:
-    api_key: your-urlscan-api-key
+func InitConfig() error {
 
-  ipinfo:
-    api_key: your-ipinfo-api-key
-`
-
-func EnsureConfigExists() error {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("could not find home directory: %v", err)
-	}
-
-	configDir := filepath.Join(home, ".config", "soc-cli")
-	configFile := filepath.Join(configDir, "config.yaml")
-
-	// Create the directory if it doesn't exist
-	if _, err := os.Stat(configDir); os.IsNotExist(err) {
-		if err := os.MkdirAll(configDir, os.ModePerm); err != nil {
-			return fmt.Errorf("could not create config directory: %v", err)
-		}
-	}
-
-	// Create file with default config if doesn't exist
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		defaultConfig := []byte(configTemplate)
-		if err := os.WriteFile(configFile, defaultConfig, 0644); err != nil {
-			return fmt.Errorf("could not create config file: %v", err)
-		}
-		fmt.Println("A new configuration file was created at:", configFile)
-	}
-
-	return nil
-}
-
-func LoadConfig() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("could not find home directory: %v", err)
@@ -57,12 +27,35 @@ func LoadConfig() error {
 
 	configPath := filepath.Join(home, ".config", "soc-cli")
 
+	// Create the directory if it doesn't exist
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
+			return fmt.Errorf("could not create config directory: %v", err)
+		}
+	}
+
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(configPath)
 
-	if err := viper.ReadInConfig(); err != nil {
-		return fmt.Errorf("error reading config file: %v", err)
+	viper.SetDefault("api_keys.urlscan.api_key", "")
+	viper.SetDefault("api_keys.ipinfo.api_key", "")
+	viper.SetDefault("api_keys.greynoise.api_key", "")
+	viper.SetDefault("api_keys.abuseipdb.api_key", "")
+	viper.SetDefault("api_keys.virustotal.api_key", "")
+
+	if err := viper.SafeWriteConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
+			slog.Debug("Config file already exists, reading existing config")
+			if err := viper.ReadInConfig(); err != nil {
+				return fmt.Errorf("error reading config file: %v", err)
+			}
+		} else {
+			return fmt.Errorf("error writing config file: %v", err)
+		}
+	} else {
+		color.Green("First execution, config file created")
+		os.Exit(0)
 	}
 
 	return nil
