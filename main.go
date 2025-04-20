@@ -9,7 +9,7 @@ package main
 import (
 	"log"
 	"soc-cli/cmd"
-	"soc-cli/config"
+	"soc-cli/internal/config"
 )
 
 func main() {
