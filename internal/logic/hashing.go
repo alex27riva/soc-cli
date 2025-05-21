@@ -16,8 +16,9 @@ import (
 	"os"
 )
 
-func ComputeMd5(file *os.File) string {
+func ComputeFileMd5(file *os.File) string {
 	hmd5 := md5.New()
+	file.Seek(0, 0)
 	if _, err := io.Copy(hmd5, file); err != nil {
 		log.Fatal("failed to calculate MD5 of file: %w", err)
 	}
@@ -26,8 +27,9 @@ func ComputeMd5(file *os.File) string {
 	return hexmd5
 }
 
-func ComputeSha1(file *os.File) string {
+func ComputeFileSha1(file *os.File) string {
 	h1 := sha1.New()
+	file.Seek(0, 0)
 	if _, err := io.Copy(h1, file); err != nil {
 		log.Fatal("failed to calculate SHA1 of file: %w", err)
 	}
@@ -36,8 +38,9 @@ func ComputeSha1(file *os.File) string {
 	return hex1
 }
 
-func ComputeSha256(file *os.File) string {
+func ComputeFileSha256(file *os.File) string {
 	h256 := sha256.New()
+	file.Seek(0, 0)
 	if _, err := io.Copy(h256, file); err != nil {
 		log.Fatal("failed to calculate SHA256 of file: %w", err)
 	}

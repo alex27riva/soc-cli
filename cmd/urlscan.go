@@ -14,11 +14,13 @@ import (
 	"github.com/spf13/viper"
 	"log"
 	"net/http"
+	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
 	"time"
 )
 
 var defautVisibility = "private" // public, unlisted or private
+var defangFlag bool
 
 const (
 	urlscanScanApi   = "https://urlscan.io/api/v1/scan/"
@@ -31,6 +33,7 @@ type urlScanResult struct {
 		Domain  string `json:"domain"`
 		Country string `json:"country"`
 		IP      string `json:"ip"`
+		Title   string `json:"title"`
 	} `json:"page"`
 	Task struct {
 		ReportURL string `json:"reportURL"`
@@ -51,7 +54,7 @@ func submitURLScan(url string) (string, error) {
 
 	var result map[string]interface{}
 
-	err := util.MakePOSTRequest(urlscanScanApi, map[string]string{"API-Key": apiKey}, requestBody, &result)
+	err := util.HTTPPostJSON(urlscanScanApi, map[string]string{"API-Key": apiKey}, requestBody, &result)
 
 	if err != nil {
 		return "", fmt.Errorf("failed to submit URL scan request: %v", err)
@@ -100,15 +103,28 @@ func fetchURLScanResult(scanID string) (*urlScanResult, error) {
 }
 
 func displayResults(scanResult urlScanResult) {
-	fmt.Printf("Scan Results for URL: %s\n", scanResult.Page.URL)
-	fmt.Printf("Domain: %s\n", scanResult.Page.Domain)
-	fmt.Printf("Country: %s\n", scanResult.Page.Country)
-	fmt.Printf("IP: %s\n", scanResult.Page.IP)
-	fmt.Printf("Link: %s\n", scanResult.Task.ReportURL)
-	if scanResult.Verdict.Malicious {
-		fmt.Println("Verdict: " + color.RedString("MALICIOUS"))
+	isMalicious := scanResult.Verdict.Malicious
+	domain := scanResult.Page.Domain
+	scannedUrl := scanResult.Page.URL
+
+	if isMalicious || defangFlag {
+
+		scannedUrl = logic.DefangURL(scannedUrl)
+		domain = logic.DefangURL(domain)
+	}
+
+	util.PrintEntry("Scan Results for URL", scannedUrl)
+	util.PrintEntry("Domain", domain)
+
+	util.PrintEntry("Title", scanResult.Page.Title)
+
+	util.PrintEntry("IP", scanResult.Page.IP)
+	util.PrintEntry("Country", scanResult.Page.Country)
+	util.PrintEntry("Link", scanResult.Task.ReportURL)
+	if isMalicious {
+		util.PrintEntry("Verdict", color.RedString("MALICIOUS"))
 	} else {
-		fmt.Println("Verdict: " + color.GreenString("SAFE"))
+		util.PrintEntry("Verdict", color.GreenString("SAFE"))
 	}
 
 }
@@ -126,7 +142,8 @@ var urlScanCmd = &cobra.Command{
 			log.Fatalf("Error submitting URL for scan: %v", err)
 		}
 
-		color.Blue("URL submitted successfully. Awaiting results...")
+		color.Green("URL submitted successfully.")
+		color.Blue("Awaiting results...")
 
 		// Fetch the scan results
 		scanResult, err := fetchURLScanResult(scanID)
@@ -139,5 +156,6 @@ var urlScanCmd = &cobra.Command{
 }
 
 func init() {
+	urlScanCmd.Flags().BoolVar(&defangFlag, "defang", false, "Defang the URL")
 	rootCmd.AddCommand(urlScanCmd)
 }

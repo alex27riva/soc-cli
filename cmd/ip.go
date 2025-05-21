@@ -8,79 +8,128 @@ package cmd
 
 import (
 	"fmt"
-	"log"
+	"github.com/fatih/color"
+	"github.com/rodaine/table"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"net"
 	"os"
 	"soc-cli/internal/apis"
 	"soc-cli/internal/util"
 	"strings"
 	"time"
-
-	"github.com/fatih/color"
-	"github.com/rodaine/table"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var reportLimit = 3
-var reportMaxLen int
+const (
+	defaultReportEntries = 3
+	defaultReportMaxLen  = 100
+	greyNoiseAPIKeyMsg   = "GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file."
+	ipInfoAPIKeyMsg      = "IPInfo API key is missing! Please set the ipinfo api_key in config.yaml file."
+	abuseIPDBAPIKeyMsg   = "AbuseIPDB API key is missing! Please set the abuseipdb api_key in config.yaml file."
+)
 
-func analyzeIP(ip string) {
+var reportMaxLen int
+var reportEntries int
+
+func checkInput(input string) error {
+	// Handle defanged IP
+	input = strings.ReplaceAll(input, "[.]", ".")
+
+	ip := net.ParseIP(input)
+	if ip == nil {
+		color.Red("Invalid IP address.")
+		os.Exit(1)
+	}
 
 	// Validate provided IP address
-	if util.IPRegex.MatchString(ip) {
-		if util.RFC1918Regex.MatchString(ip) {
-			fmt.Printf("The IP provided %s is a RFC1918 bogus IP address.\n", ip)
-			os.Exit(0)
-		} else if ip == "127.0.0.1" {
-			fmt.Printf("The IP provided %s is a loopback IP address.\n", ip)
-			os.Exit(0)
+	switch {
+	case ip.IsPrivate():
+		return fmt.Errorf("the IP %s is a RFC1918 bogus IP address", ip)
+	case ip.IsLoopback():
+		return fmt.Errorf("the IP %s is a loopback IP address", ip)
+	case ip.IsMulticast():
+		return fmt.Errorf("the IP %s is a multicast IP address", ip)
+	case ip.To16() != nil && ip.To4() == nil:
+		return fmt.Errorf("IPv6 addresses are not supported yet")
+	}
+
+	analyzeIP(ip)
+	return nil
+}
+
+func checkAPIKeys() []string {
+	var missingKeys []string
+	if viper.GetString("api_keys.greynoise.api_key") == "" {
+		missingKeys = append(missingKeys, greyNoiseAPIKeyMsg)
+	}
+	if viper.GetString("api_keys.ipinfo.api_key") == "" {
+		missingKeys = append(missingKeys, ipInfoAPIKeyMsg)
+	}
+	if viper.GetString("api_keys.abuseipdb.api_key") == "" {
+		missingKeys = append(missingKeys, abuseIPDBAPIKeyMsg)
+	}
+	return missingKeys
+}
+
+func analyzeIP(ip net.IP) {
+	missingKeys := checkAPIKeys()
+	if len(missingKeys) > 0 {
+		for _, msg := range missingKeys {
+			color.Yellow(msg)
 		}
-	} else {
-		log.Fatalf("The IP provided %s is not a valid IPv4 address.\n", ip)
 	}
 
-	greyNoiseApiKey := viper.GetString("api_keys.greynoise.api_key")
-	if greyNoiseApiKey == "" {
-		log.Println("GreyNoise API key is missing! Please set the greynoise api_key in config.yaml file")
+	// Fetch IP information
+	if viper.GetString("api_keys.ipinfo.api_key") != "" {
+		ipInfoData := apis.GetIPInfo(ip, viper.GetString("api_keys.ipinfo.api_key"))
+		printIPInfo(ipInfoData)
 	}
 
-	ipInfoApiKey := viper.GetString("api_keys.ipinfo.api_key")
-	if ipInfoApiKey == "" {
-		log.Println("API key is missing! Please set the ipinfo api_key in config.yaml file")
+	if viper.GetString("api_keys.greynoise.api_key") != "" {
+		greyNoiseData := apis.GetGreyNoiseData(ip, viper.GetString("api_keys.greynoise.api_key"))
+		printGreyNoiseData(greyNoiseData)
 	}
 
-	abuseIPDBApiKey := viper.GetString("api_keys.abuseipdb.api_key")
-	if abuseIPDBApiKey == "" {
-		log.Println("API key is missing! Please set the abuseipdb api_key in config.yaml file")
+	if viper.GetString("api_keys.abuseipdb.api_key") != "" {
+		abuseIPDBData := apis.GetAbuseIPDBInfo(ip, viper.GetString("api_keys.abuseipdb.api_key"))
+		printAbuseIPDBData(abuseIPDBData)
 	}
 
-	// Fetch IpInfo api
-	ipInfoData := apis.GetIPInfo(ip, ipInfoApiKey)
+}
 
-	// Fetch GreyNoise threat intelligence
-	greyNoiseData := apis.GetGreyNoiseData(ip, greyNoiseApiKey)
-
-	abuseIPDBData := apis.GetAbuseIPDBInfo(ip, abuseIPDBApiKey)
-
-	// Print the IP information
+func printIPInfo(ipInfoData *apis.IPInfo) {
 	color.Blue("IP information from IPInfo")
-	fmt.Printf("IP: %s\nHostname: %s\nOrg: %s\nCountry: %s\n",
-		ipInfoData.IP, ipInfoData.Hostname, ipInfoData.Org, ipInfoData.Country)
+	util.PrintEntry("IP", ipInfoData.IP)
+	util.PrintEntry("Hostname", ipInfoData.Hostname)
+	util.PrintEntry("Org", ipInfoData.Org)
+	util.PrintEntry("Country", ipInfoData.Country)
 
+}
+
+func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 	if greyNoiseData != nil {
 		color.Blue("\nGreyNoise Threat Intelligence")
 
-		classification := greyNoiseData.Classification
-		if classification == "malicious" {
-			classification = color.RedString(strings.ToUpper(classification))
-		} else if classification == "benign" {
-			classification = color.GreenString(strings.ToUpper(classification))
+		classification := strings.ToUpper(greyNoiseData.Classification)
+		switch classification {
+		case "BENIGN":
+			classification = color.GreenString(classification)
+		case "MALICIOUS":
+			classification = color.RedString(classification)
+		case "SUSPICIOUS":
+			classification = color.YellowString(classification)
 		}
 
-		fmt.Printf("Noise: %v\nRiot: %v\nClassification: %s\nName: %s\nLink: %s\n",
-			greyNoiseData.Noise, greyNoiseData.Riot, classification, greyNoiseData.Name, greyNoiseData.Link)
+		util.PrintEntry("Noise", util.PrintYesNo(greyNoiseData.Noise))
+		util.PrintEntry("Riot", util.PrintYesNo(greyNoiseData.Riot))
+		util.PrintEntry("Classification", classification)
+		util.PrintEntry("Message", greyNoiseData.Message)
+		util.PrintEntry("Last seen", greyNoiseData.LastSeen)
+		util.PrintEntry("Link", greyNoiseData.Link)
 	}
+}
 
+func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 	if abuseIPDBData != nil {
 		color.Blue("\nAbuseIPDB report")
 		if abuseIPDBData.Data.TotalReports == 0 {
@@ -91,9 +140,9 @@ func analyzeIP(ip string) {
 		lastReportDate, _ := time.Parse(time.RFC3339, abuseIPDBData.Data.LastReportedAt)
 
 		// Print AbuseIPDB info
-		fmt.Printf("Abuse Confidence Score: %d\n", abuseIPDBData.Data.AbuseConfidenceScore)
-		fmt.Printf("Total Reports: %d\n", abuseIPDBData.Data.TotalReports)
-		fmt.Printf("Last Reported At: %s\n", lastReportDate.Format("Monday, January 2, 2006"))
+		util.PrintEntry("Abuse Confidence Score", abuseIPDBData.Data.AbuseConfidenceScore)
+		util.PrintEntry("Total Reports", abuseIPDBData.Data.TotalReports)
+		util.PrintEntry("Last Reported At", lastReportDate.Format("Monday, January 2, 2006"))
 
 		// Print the individual reports if available
 		if len(abuseIPDBData.Data.Reports) > 0 {
@@ -104,21 +153,18 @@ func analyzeIP(ip string) {
 			tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
 			for index, report := range abuseIPDBData.Data.Reports {
-				if index > reportLimit {
+				if index >= reportEntries {
 					break
 				}
 				humanTime, _ := util.HumanReadableDate(report.ReportedAt)
 				tbl.AddRow(humanTime, report.ReporterCountry, util.ShortStr(report.Comment, reportMaxLen))
 			}
+			fmt.Println()
 			tbl.Print()
 
 		}
 
-	} else {
-		color.Red("An error has occured.")
-		os.Exit(1)
 	}
-
 }
 
 var ipCmd = &cobra.Command{
@@ -126,12 +172,16 @@ var ipCmd = &cobra.Command{
 	Short: "Analyze an IP address for geolocation, ASN, and threat status",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		ip := args[0]
-		analyzeIP(ip)
+		input := args[0]
+		if err := checkInput(input); err != nil {
+			color.Red("Error: %v", err)
+			os.Exit(1)
+		}
 	},
 }
 
 func init() {
-	ipCmd.Flags().IntVarP(&reportMaxLen, "length", "l", 50, "AbuseIPDB report max length")
+	ipCmd.Flags().IntVarP(&reportMaxLen, "length", "l", defaultReportMaxLen, "AbuseIPDB report max length")
+	ipCmd.Flags().IntVarP(&reportEntries, "reports", "r", defaultReportEntries, "AbuseIPDB reports to show")
 	rootCmd.AddCommand(ipCmd)
 }

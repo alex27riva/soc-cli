@@ -13,10 +13,20 @@ import (
 	"io"
 	"mime"
 	"mime/multipart"
+	"mime/quotedprintable"
 	"net/mail"
 	"os"
 	"soc-cli/internal/util"
 	"strings"
+)
+
+const (
+	emlExtension                = ".eml"
+	contentTypeHeader           = "Content-Type"
+	transferEncodingHeader      = "Content-Transfer-Encoding"
+	receivedSPFHeader           = "Received-SPF"
+	dkimSignatureHeader         = "DKIM-Signature"
+	authenticationResultsHeader = "Authentication-Results"
 )
 
 var analyzeEmailCmd = &cobra.Command{
@@ -35,6 +45,10 @@ func init() {
 
 // analyzeEmail processes the .eml file and extracts attachments and links
 func analyzeEmail(filePath string) {
+	if !isValidEmlFile(filePath) {
+		return
+	}
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
@@ -48,57 +62,66 @@ func analyzeEmail(filePath string) {
 		fmt.Println("Error parsing .eml file:", err)
 		return
 	}
-	color.Blue("Main information:")
-	fmt.Println("From:", msg.Header.Get("From"))
-	fmt.Println("To:", msg.Header.Get("To"))
-	fmt.Println("Subject:", msg.Header.Get("Subject"))
-	fmt.Println("Date:", msg.Header.Get("Date"))
-	fmt.Println("Return-Path:", msg.Header.Get("Return-Path"))
+
+	printEmailHeaders(msg)
 
 	// Check for SPF information
-	spfHeader := msg.Header.Get("Received-SPF")
-	if spfHeader != "" {
-		fmt.Println(color.BlueString("\nSPF Information:\n"), spfHeader)
-	} else {
-		fmt.Println(color.BlueString("\nSPF Information:\n") + "No Received-SPF header found.")
-	}
+	printHeaderInfo(msg.Header.Get(receivedSPFHeader), "SPF Information")
 
 	// Extract DKIM Information
-	dkimHeader := msg.Header.Get("DKIM-Signature")
-	if dkimHeader != "" {
-		color.Blue("\nDKIM Information:")
-		fmt.Println(dkimHeader)
-	} else {
-		fmt.Println(color.BlueString("\nDKIM Information:\n") + "No DKIM-Signature header found.")
-	}
+	printHeaderInfo(msg.Header.Get(dkimSignatureHeader), "DKIM Information")
 
 	// Extract DMARC Information from Authentication-Results header
-	authResults := msg.Header.Get("Authentication-Results")
+	authResults := msg.Header.Get(authenticationResultsHeader)
 	if authResults != "" {
 		extractDMARCDKIM(authResults)
 	} else {
 		fmt.Println("\nDMARC Information: No Authentication-Results header found.")
 	}
 
-	mediaType, params, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
-	if err != nil {
-		fmt.Println("Error parsing content type:", err)
-		return
+	processEmailBody(msg)
+}
+
+// isValidEmlFile checks if the provided file path has a valid .eml extension
+func isValidEmlFile(filePath string) bool {
+	if !strings.HasSuffix(strings.ToLower(filePath), emlExtension) {
+		color.Red("The provided file is not an .eml file.")
+		return false
 	}
+	return true
+}
+
+// processEmailBody processes the email body based on its content type
+func processEmailBody(msg *mail.Message) {
+	mediaType, params, err := mime.ParseMediaType(msg.Header.Get(contentTypeHeader))
+	handleError(err, "Error parsing content type:")
 
 	if strings.HasPrefix(mediaType, "multipart/") {
-		// Handle multipart emails (usually contains attachments and text)
 		mr := multipart.NewReader(msg.Body, params["boundary"])
 		processMultipart(mr)
 	} else {
-		// Handle single-part emails (just extract links)
-		body, _ := io.ReadAll(msg.Body)
+		handleSinglePartEmail(msg)
+	}
+}
+
+// handleSinglePartEmail handles single-part emails and extracts links
+func handleSinglePartEmail(msg *mail.Message) {
+	body, _ := io.ReadAll(msg.Body)
+	encoding := msg.Header.Get(transferEncodingHeader)
+
+	if strings.ToLower(encoding) == "quoted-printable" {
+		reader := quotedprintable.NewReader(strings.NewReader(string(body)))
+		decodedBody, err := io.ReadAll(reader)
+		handleError(err, "Error decoding quoted-printable content:")
+		extractLinks(string(decodedBody))
+	} else {
 		extractLinks(string(body))
 	}
 }
 
 // processMultipart processes multipart emails for attachments and links
 func processMultipart(mr *multipart.Reader) {
+	attachmentsFound := false
 	for {
 		part, err := mr.NextPart()
 		if err == io.EOF {
@@ -109,21 +132,24 @@ func processMultipart(mr *multipart.Reader) {
 			return
 		}
 
-		contentType := part.Header.Get("Content-Type")
+		contentType := part.Header.Get(contentTypeHeader)
 		disposition := part.Header.Get("Content-Disposition")
 
 		// If it's an attachment, list it
 		if strings.Contains(disposition, "attachment") {
-			fileName := part.FileName()
-			if fileName == "" {
-				fileName = "unnamed attachment"
+			if !attachmentsFound {
+				color.Blue("\nAttachments:")
+				attachmentsFound = true
 			}
-			fmt.Printf("Attachment: %s (MIME type: %s)\n", fileName, contentType)
+			handleAttachment(part, contentType)
 		} else {
 			// Otherwise, it's likely part of the email body (text or HTML)
 			body, _ := io.ReadAll(part)
 			extractLinks(string(body))
 		}
+	}
+	if !attachmentsFound {
+		fmt.Println("\nNo attachments found.")
 	}
 }
 
@@ -162,5 +188,46 @@ func extractLinks(body string) {
 		}
 	} else {
 		color.Blue("\nNo links found in the email.")
+	}
+}
+
+func handleAttachment(part *multipart.Part, contentType string) {
+	fileName := part.FileName()
+	if fileName == "" {
+		fileName = "unnamed attachment"
+	}
+
+	fmt.Printf("Attachment: %s (MIME type: %s)\n", fileName, contentType)
+}
+
+func handleError(err error, message string) {
+	if err != nil {
+		fmt.Println(message, err)
+	}
+}
+
+func printHeader(headerName, headerValue string) {
+	if headerValue != "" {
+		fmt.Printf("%s: %s\n", color.CyanString(headerName), headerValue)
+	}
+}
+
+func printEmailHeaders(msg *mail.Message) {
+	color.Blue("Main information:")
+	printHeader("From", msg.Header.Get("From"))
+	printHeader("To", msg.Header.Get("To"))
+	printHeader("Cc", msg.Header.Get("Cc"))
+	printHeader("Bcc", msg.Header.Get("Bcc"))
+	printHeader("Subject", msg.Header.Get("Subject"))
+	printHeader("Date", msg.Header.Get("Date"))
+	printHeader("Reply-To", msg.Header.Get("Reply-To"))
+	printHeader("Return-Path", msg.Header.Get("Return-Path"))
+}
+
+func printHeaderInfo(headerValue, headerName string) {
+	if headerValue != "" {
+		fmt.Println(color.BlueString("\n%s:\n", headerName), headerValue)
+	} else {
+		fmt.Println(color.BlueString("\n%s:\n", headerName) + "No information found.")
 	}
 }

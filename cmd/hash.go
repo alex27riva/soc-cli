@@ -40,12 +40,9 @@ func showHashes(filePath string, asJson bool) {
 
 	defer file.Close()
 
-	md5Digest := logic.ComputeMd5(file)
-	// Reset the file pointer to the beginning
-	file.Seek(0, 0)
-	sha1Digest := logic.ComputeSha1(file)
-	file.Seek(0, 0)
-	sha256Digest := logic.ComputeSha256(file)
+	md5Digest := logic.ComputeFileMd5(file)
+	sha1Digest := logic.ComputeFileSha1(file)
+	sha256Digest := logic.ComputeFileSha256(file)
 
 	if asJson {
 
