@@ -68,7 +68,7 @@ func GetWhoisData(domain string) (*DomainInfo, error) {
 
 	var whois DomainInfo
 
-	err := util.MakeGETRequest(apiUrl, nil, &whois)
+	_, err := util.HTTPGetJSON(apiUrl, nil, &whois)
 
 	return &whois, err
 }

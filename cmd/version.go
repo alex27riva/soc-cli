@@ -13,7 +13,7 @@ import (
 	"log"
 )
 
-var Version = "dev"
+var Version = "v01.0"
 
 type verOutput struct {
 	Version string `json:"version"`

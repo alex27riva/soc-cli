@@ -9,31 +9,33 @@ package apis
 import (
 	"fmt"
 	"log"
+	"net"
 	"soc-cli/internal/util"
 )
 
 const greyNoiseAPIURL = "https://api.greynoise.io/v3/community/%s"
 
-type greyNoiseInfo struct {
+type GreyNoiseInfo struct {
 	IP             string `json:"ip"`
 	Noise          bool   `json:"noise"`
 	Riot           bool   `json:"riot"`
 	Classification string `json:"classification"`
-	Name           string `json:"name"`
 	Link           string `json:"link"`
+	LastSeen       string `json:"last_seen"`
+	Message       string `json:"message"`
 }
 
 // Get threat intelligence from GreyNoise API
-func GetGreyNoiseData(ip string, apiKey string) *greyNoiseInfo {
-	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip)
+func GetGreyNoiseData(ip net.IP, apiKey string) *GreyNoiseInfo {
+	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip.String())
 
 	headers := map[string]string{
 		"key": apiKey,
 	}
 
-	var greyNoiseData greyNoiseInfo
+	var greyNoiseData GreyNoiseInfo
 
-	err := util.MakeGETRequest(apiUrl, headers, &greyNoiseData)
+	_, err := util.HTTPGetJSON(apiUrl, headers, &greyNoiseData)
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}

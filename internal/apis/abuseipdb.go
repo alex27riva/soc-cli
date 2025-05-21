@@ -9,12 +9,13 @@ package apis
 import (
 	"fmt"
 	"log"
+	"net"
 	"soc-cli/internal/util"
 )
 
 const abuseAPIURL = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90&verbose"
 
-type abuseIPDBResponse struct {
+type AbuseIPDBResponse struct {
 	Data struct {
 		IPAddress            string   `json:"ipAddress"`
 		IsPublic             bool     `json:"isPublic"`
@@ -38,17 +39,17 @@ type abuseIPDBResponse struct {
 }
 
 // getAbuseIPDBInfo fetches data from AbuseIPDB for a specific IP address
-func GetAbuseIPDBInfo(ip string, apiKey string) *abuseIPDBResponse {
-	apiUrl := fmt.Sprintf(abuseAPIURL, ip)
+func GetAbuseIPDBInfo(ip net.IP, apiKey string) *AbuseIPDBResponse {
+	apiUrl := fmt.Sprintf(abuseAPIURL, ip.String())
 
 	headers := map[string]string{
 		"Key":    apiKey,
 		"Accept": "application/json",
 	}
 
-	var data abuseIPDBResponse
+	var data AbuseIPDBResponse
 
-	err := util.MakeGETRequest(apiUrl, headers, &data)
+	_, err := util.HTTPGetJSON(apiUrl, headers, &data)
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}

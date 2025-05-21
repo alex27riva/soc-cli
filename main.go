@@ -9,16 +9,13 @@ package main
 import (
 	"log"
 	"soc-cli/cmd"
-	"soc-cli/config"
+	"soc-cli/internal/config"
 )
 
 func main() {
-	if err := config.EnsureConfigExists(); err != nil {
-		log.Fatalf("Error ensuring config exists: %v", err)
+	if err := config.InitConfig(); err != nil {
+		log.Fatalf("Error initializing config: %v", err)
 	}
 
-	if err := config.LoadConfig(); err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
 	cmd.Execute()
 }
