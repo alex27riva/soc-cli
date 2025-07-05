@@ -8,7 +8,8 @@ package apis
 
 import (
 	"fmt"
-	"soc-cli/internal/util"
+
+	"resty.dev/v3"
 )
 
 const whodatAPIURL = "https://who-dat.as93.net/%s"
@@ -66,9 +67,14 @@ type DomainInfo struct {
 func GetWhoisData(domain string) (*DomainInfo, error) {
 	apiUrl := fmt.Sprintf(whodatAPIURL, domain)
 
-	var whois DomainInfo
+	result := &DomainInfo{}
 
-	_, err := util.HTTPGetJSON(apiUrl, nil, &whois)
+	client := resty.New()
+	defer client.Close()
 
-	return &whois, err
+	_, err := client.R().
+		SetResult(result).
+		Get(apiUrl)
+
+	return result, err
 }

@@ -10,7 +10,8 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"soc-cli/internal/util"
+
+	"resty.dev/v3"
 )
 
 const abuseAPIURL = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90&verbose"
@@ -47,12 +48,18 @@ func GetAbuseIPDBInfo(ip net.IP, apiKey string) *AbuseIPDBResponse {
 		"Accept": "application/json",
 	}
 
-	var data AbuseIPDBResponse
+	result := &AbuseIPDBResponse{}
 
-	_, err := util.HTTPGetJSON(apiUrl, headers, &data)
+	client := resty.New()
+	defer client.Close()
+
+	_, err := client.R().
+		SetHeaders(headers).
+		SetResult(result).
+		Get(apiUrl)
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}
 
-	return &data
+	return result
 }

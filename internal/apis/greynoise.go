@@ -10,7 +10,8 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"soc-cli/internal/util"
+
+	"resty.dev/v3"
 )
 
 const greyNoiseAPIURL = "https://api.greynoise.io/v3/community/%s"
@@ -22,7 +23,7 @@ type GreyNoiseInfo struct {
 	Classification string `json:"classification"`
 	Link           string `json:"link"`
 	LastSeen       string `json:"last_seen"`
-	Message       string `json:"message"`
+	Message        string `json:"message"`
 }
 
 // Get threat intelligence from GreyNoise API
@@ -33,12 +34,18 @@ func GetGreyNoiseData(ip net.IP, apiKey string) *GreyNoiseInfo {
 		"key": apiKey,
 	}
 
-	var greyNoiseData GreyNoiseInfo
+	result := &GreyNoiseInfo{}
 
-	_, err := util.HTTPGetJSON(apiUrl, headers, &greyNoiseData)
+	client := resty.New()
+	defer client.Close()
+
+	_, err := client.R().
+		SetHeaders(headers).
+		SetResult(result).
+		Get(apiUrl)
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}
 
-	return &greyNoiseData
+	return result
 }

@@ -10,7 +10,8 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"soc-cli/internal/util"
+
+	"resty.dev/v3"
 )
 
 const ipInfoAPIURL = "https://ipinfo.io/%s?token=%s"
@@ -25,12 +26,17 @@ type IPInfo struct {
 func GetIPInfo(ip net.IP, apiKey string) *IPInfo {
 	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip.String(), apiKey)
 
-	var info IPInfo
+	result := &IPInfo{}
 
-	_, err := util.HTTPGetJSON(apiUrl, nil, &info)
+	client := resty.New()
+	defer client.Close()
+
+	_, err := client.R().
+		SetResult(result).
+		Get(apiUrl)
 	if err != nil {
 		log.Fatalf("Error fetching IP info: %v", err)
 	}
 
-	return &info
+	return result
 }

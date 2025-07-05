@@ -9,11 +9,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/spf13/cobra"
 	"log"
+
+	"github.com/spf13/cobra"
 )
 
-var Version = "v0.1.0"
+var Version = "v0.2.0"
 
 type verOutput struct {
 	Version string `json:"version"`
