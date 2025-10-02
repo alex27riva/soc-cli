@@ -8,11 +8,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"net"
-	"soc-cli/internal/util"
-		"github.com/fatih/color"
 	"strings"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"resty.dev/v3"
 )
 
 func getMyIP() net.IP {
@@ -23,12 +24,17 @@ func getMyIP() net.IP {
 
 	url := "https://ip.me"
 
-	body, err := util.GetRaw(url, headers)
+	client := resty.New()
+	defer client.Close()
+
+	res, err := client.R().
+		SetHeaders(headers).
+		Get(url)
 	if err != nil {
 		color.Red("Error fetching API: %v", err)
 	}
 
-	ip := strings.TrimSpace(string(body))
+	ip := strings.TrimSpace(res.String())
 	return net.ParseIP(ip)
 }
 

@@ -7,11 +7,10 @@ See the LICENSE file for details.
 package apis
 
 import (
-	"fmt"
-	"soc-cli/internal/util"
+	"resty.dev/v3"
 )
 
-const whodatAPIURL = "https://who-dat.as93.net/%s"
+const whodatBaseURL = "https://who-dat.as93.net"
 
 // Domain represents the domain information
 type Domain struct {
@@ -64,11 +63,17 @@ type DomainInfo struct {
 }
 
 func GetWhoisData(domain string) (*DomainInfo, error) {
-	apiUrl := fmt.Sprintf(whodatAPIURL, domain)
+	client := resty.New()
+	defer client.Close()
 
-	var whois DomainInfo
+	client.SetBaseURL(whodatBaseURL)
 
-	_, err := util.HTTPGetJSON(apiUrl, nil, &whois)
+	result := &DomainInfo{}
 
-	return &whois, err
+	_, err := client.R().
+		SetPathParam("domain", domain).
+		SetResult(result).
+		Get("/{domain}")
+
+	return result, err
 }

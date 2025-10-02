@@ -7,13 +7,13 @@ See the LICENSE file for details.
 package apis
 
 import (
-	"fmt"
 	"log"
 	"net"
-	"soc-cli/internal/util"
+
+	"resty.dev/v3"
 )
 
-const ipInfoAPIURL = "https://ipinfo.io/%s?token=%s"
+const IPInfoBaseURL = "https://ipinfo.io"
 
 type IPInfo struct {
 	IP       string `json:"ip"`
@@ -23,14 +23,24 @@ type IPInfo struct {
 }
 
 func GetIPInfo(ip net.IP, apiKey string) *IPInfo {
-	apiUrl := fmt.Sprintf(ipInfoAPIURL, ip.String(), apiKey)
+	client := resty.New()
+	defer client.Close()
 
-	var info IPInfo
+	client.SetBaseURL(IPInfoBaseURL)
 
-	_, err := util.HTTPGetJSON(apiUrl, nil, &info)
+	params := map[string]string{
+		"token": apiKey,
+	}
+	result := &IPInfo{}
+
+	_, err := client.R().
+		SetPathParam("ip", ip.String()).
+		SetQueryParams(params).
+		SetResult(result).
+		Get("/{ip}")
 	if err != nil {
 		log.Fatalf("Error fetching IP info: %v", err)
 	}
 
-	return &info
+	return result
 }

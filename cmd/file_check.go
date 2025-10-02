@@ -13,18 +13,19 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"io"
 	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"soc-cli/internal/apis"
-	"soc-cli/internal/util"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"resty.dev/v3"
 )
 
 const virusTotalBaseURL = "https://www.virustotal.com/api/v3"
@@ -106,17 +107,24 @@ func calculateSHA256(filePath string) (string, error) {
 
 func fileExistsInVirusTotal(apiKey, hash string) (exist bool, report apis.VTResponse) {
 
+	apiUrl := virusTotalBaseURL + virusTotalFileReportEndpoint + hash
 	headers := map[string]string{
 		"X-Apikey": apiKey,
 		"Accept":   "application/json",
 	}
 
-	statusCode, err := util.HTTPGetJSON(virusTotalBaseURL+virusTotalFileReportEndpoint+hash, headers, &report)
+	client := resty.New()
+	defer client.Close()
+
+	res, err := client.R().
+		SetHeaders(headers).
+		SetResult(report).
+		Get(apiUrl)
 	if err != nil {
 		log.Fatalf("Error fetching VirusTotal: %v", err)
 	}
 
-	if statusCode == http.StatusNotFound {
+	if res.StatusCode() == http.StatusNotFound {
 		return false, apis.VTResponse{} // File not found on VirusTotal
 	}
 

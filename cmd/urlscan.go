@@ -9,14 +9,16 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"log"
 	"net/http"
 	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
 	"time"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"resty.dev/v3"
 )
 
 var defautVisibility = "private" // public, unlisted or private
@@ -50,12 +52,19 @@ func submitURLScan(url string) (string, error) {
 		return "", fmt.Errorf("API key is missing! Please set the urlscan api_key in config.yaml file")
 	}
 
+	headers := map[string]string{"API-Key": apiKey}
 	requestBody := map[string]string{"url": url, "visibility": defautVisibility}
 
 	var result map[string]interface{}
 
-	err := util.HTTPPostJSON(urlscanScanApi, map[string]string{"API-Key": apiKey}, requestBody, &result)
+	client := resty.New()
+	defer client.Close()
 
+	_, err := client.R().
+		SetHeaders(headers).
+		SetBody(requestBody).
+		SetResult(&result).
+		Post(urlscanScanApi)
 	if err != nil {
 		return "", fmt.Errorf("failed to submit URL scan request: %v", err)
 	}
