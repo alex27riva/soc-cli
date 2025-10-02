@@ -14,7 +14,10 @@ import (
 	"resty.dev/v3"
 )
 
-const abuseAPIURL = "https://api.abuseipdb.com/api/v2/check?ipAddress=%s&maxAgeInDays=90&verbose"
+const (
+	abuseIPBaseURL = "https://api.abuseipdb.com/api/v2"
+	maxAgeDays     = 90
+)
 
 type AbuseIPDBResponse struct {
 	Data struct {
@@ -41,22 +44,29 @@ type AbuseIPDBResponse struct {
 
 // getAbuseIPDBInfo fetches data from AbuseIPDB for a specific IP address
 func GetAbuseIPDBInfo(ip net.IP, apiKey string) *AbuseIPDBResponse {
-	apiUrl := fmt.Sprintf(abuseAPIURL, ip.String())
+	client := resty.New()
+	defer client.Close()
+
+	client.SetBaseURL(abuseIPBaseURL)
 
 	headers := map[string]string{
 		"Key":    apiKey,
 		"Accept": "application/json",
 	}
 
-	result := &AbuseIPDBResponse{}
+	params := map[string]string{
+		"ipAddress":    ip.String(),
+		"maxAgeInDays": fmt.Sprint(maxAgeDays),
+		"verbose":      "",
+	}
 
-	client := resty.New()
-	defer client.Close()
+	result := &AbuseIPDBResponse{}
 
 	_, err := client.R().
 		SetHeaders(headers).
+		SetQueryParams(params).
 		SetResult(result).
-		Get(apiUrl)
+		Get("/check")
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}

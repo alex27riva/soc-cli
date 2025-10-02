@@ -7,7 +7,6 @@ See the LICENSE file for details.
 package apis
 
 import (
-	"fmt"
 	"log"
 	"net"
 
@@ -15,6 +14,7 @@ import (
 )
 
 const greyNoiseAPIURL = "https://api.greynoise.io/v3/community/%s"
+const greyNoiseBaseURL = "https://api.greynoise.io/v3/community"
 
 type GreyNoiseInfo struct {
 	IP             string `json:"ip"`
@@ -28,7 +28,10 @@ type GreyNoiseInfo struct {
 
 // Get threat intelligence from GreyNoise API
 func GetGreyNoiseData(ip net.IP, apiKey string) *GreyNoiseInfo {
-	apiUrl := fmt.Sprintf(greyNoiseAPIURL, ip.String())
+	client := resty.New()
+	defer client.Close()
+
+	client.SetBaseURL(greyNoiseBaseURL)
 
 	headers := map[string]string{
 		"key": apiKey,
@@ -36,13 +39,11 @@ func GetGreyNoiseData(ip net.IP, apiKey string) *GreyNoiseInfo {
 
 	result := &GreyNoiseInfo{}
 
-	client := resty.New()
-	defer client.Close()
-
 	_, err := client.R().
 		SetHeaders(headers).
+		SetPathParam("ip", ip.String()).
 		SetResult(result).
-		Get(apiUrl)
+		Get("/{ip}")
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB info: %v", err)
 	}
