@@ -14,10 +14,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var b64eCmd = &cobra.Command{
+	Use:   "base64 <string-to-encode>",
+	Short: "Encode a string to Base64",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		input := args[0]
+		encoded := base64.StdEncoding.EncodeToString([]byte(input))
+		fmt.Println(encoded)
+	},
+	Aliases: []string{"b64"},
+}
+
 var b64dCmd = &cobra.Command{
-	Use:   "b64d <base64-string>",
+	Use:   "base64 <base64-string>",
 	Short: "Decode a Base64 string",
-	Long:  "Decode a Base64-encoded string and display the original content.",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		base64Str := args[0]
@@ -27,9 +38,10 @@ var b64dCmd = &cobra.Command{
 		}
 		fmt.Println(string(decoded))
 	},
+	Aliases: []string{"b64"},
 }
 
-// Register the b64d subcommand under misc
 func init() {
-	miscCmd.AddCommand(b64dCmd)
+	encodeCmd.AddCommand(b64eCmd)
+	decodeCmd.AddCommand(b64dCmd)
 }
