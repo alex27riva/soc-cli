@@ -14,22 +14,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var Version = "v0.2.0"
+var (
+	Version string
+	Commit  string
+	Date    string
+)
 
-type verOutput struct {
+type VersionInfo struct {
 	Version string `json:"version"`
+	Commit  string `json:"commit"`
+	Date    string `json:"date"`
 }
 
 func displayVersion(asJSON bool) {
 	if asJSON {
-		jsonData, err := json.MarshalIndent(verOutput{Version: Version}, "", " ")
+		versionInfo := VersionInfo{
+			Version: Version,
+			Commit:  Commit,
+			Date:    Date,
+		}
+		jsonData, err := json.MarshalIndent(versionInfo, "", " ")
 		if err != nil {
 			log.Fatalf("Error marshalling JSON: %v", err)
 		}
 		fmt.Println(string(jsonData))
 
 	} else {
-		fmt.Printf("soc-cli version: %s\n", Version)
+		fmt.Printf("Version: %s\n", Version)
+		fmt.Printf("Commit: %s\n", Commit)
+		fmt.Printf("Date: %s\n", Date)
 	}
 
 }

@@ -2,49 +2,62 @@
 
 program_name="soc-cli"
 
-# Determine the version
+date=$(date '+%Y%m%d')
+short_sha=$(git rev-parse --short HEAD)
+
+# Determine the version: CLI arg > version.txt > dev-<short_sha>
 if [ -n "$1" ]; then
     version=$1
 else
-    # Get the short SHA of the current commit
-    short_sha=$(git rev-parse --short HEAD)
-    echo "No version specified, defaulting to dev-${short-sha}"
-    version="dev-${short_sha}"
+    # Try to read version from version.txt if it exists
+    if [ -f version.txt ]; then
+        # Read and trim whitespace
+        version=$(tr -d '\r' < version.txt | awk '{gsub(/^[ \t]+|[ \t]+$/, ""); print}')
+    fi
+
+    if [ -z "${version}" ]; then
+        echo "No version specified, defaulting to dev-${short_sha}"
+        version="dev-${short_sha}"
+    else
+        echo "Using version from version.txt: ${version}"
+    fi
 fi
 
-# Remove existing soc-cli_* files if they exist
-echo ":: Removing existing ${program_name} files..."
-rm build/${program_name}_*
+mkdir -p build
 
-# Build for Windows (64-bit)
-echo ":: Building for Windows (64-bit)..."
-GOOS=windows GOARCH=amd64 go build -ldflags "-X 'soc-cli/cmd.Version=${version}'" -o "build/${program_name}_${version}_windows_amd64.exe"
-if [ $? -ne 0 ]; then
-    echo "Failed to build for Windows."
-    exit 1
-fi
+echo ":: Removing existing ${program_name}_* files..."
+rm -f build/${program_name}_*
 
-# Build for macOS (Intel)
-echo ":: Building for macOS (Intel)..."
-GOOS=darwin GOARCH=amd64 go build -ldflags "-X 'soc-cli/cmd.Version=${version}'" -o "build/${program_name}_${version}_darwin_amd64"
-if [ $? -ne 0 ]; then
-    echo "Failed to build for macOS (Intel)."
-    exit 1
-fi
+ldflags="-X 'soc-cli/cmd.Version=${version}' -X 'soc-cli/cmd.Commit=${short_sha}' -X 'soc-cli/cmd.Date=${date}'"
 
-# Build for macOS (Apple Silicon)
-echo ":: Building for macOS (Apple Silicon)..."
-GOARCH=arm64 go build -ldflags "-X 'soc-cli/cmd.Version=${version}'" -o "build/${program_name}_${version}_darwin_arm64"
-if [ $? -ne 0 ]; then
-    echo "Failed to build for macOS (Apple Silicon)."
-    exit 1
-fi
+targets=(
+    "windows amd64 .exe"
+    "darwin amd64 "
+    "darwin arm64 "
+    "linux amd64 "
+)
 
-# Build for Linux (64-bit)
-echo ":: Building for Linux (64-bit)..."
-GOOS=linux GOARCH=amd64 go build -ldflags "-X 'soc-cli/cmd.Version=${version}'" -o "build/${program_name}_${version}_linux_amd64"
-if [ $? -ne 0 ]; then
-    echo "Failed to build for Linux (64-bit)."
+fail_count=0
+
+for t in "${targets[@]}"; do
+    # shellcheck disable=SC2206
+    parts=($t)
+    GOOS=${parts[0]}
+    GOARCH=${parts[1]}
+    ext=${parts[2]}
+
+    out_name="${program_name}_${version}_${GOOS}_${GOARCH}${ext}"
+    echo ":: Building for ${GOOS}/${GOARCH} -> ${out_name}"
+
+    GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags "${ldflags}" -o "build/${out_name}"
+    if [ $? -ne 0 ]; then
+        echo "Failed to build for ${GOOS}/${GOARCH}."
+        fail_count=$((fail_count+1))
+    fi
+done
+
+if [ ${fail_count} -ne 0 ]; then
+    echo "Build finished with ${fail_count} failure(s)."
     exit 1
 fi
 
