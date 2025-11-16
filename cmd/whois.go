@@ -8,11 +8,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"os"
 	"soc-cli/internal/apis"
 	"soc-cli/internal/util"
+
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 func displayData(domainInfo apis.DomainInfo) {
@@ -54,7 +55,7 @@ var whoisCmd = &cobra.Command{
 
 		whoisData, err := apis.GetWhoisData(target)
 		if err != nil {
-			color.Red("An error has occured.")
+			color.Red(err.Error())
 			os.Exit(1)
 		} else {
 			displayData(*whoisData)

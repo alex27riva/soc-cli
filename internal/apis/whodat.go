@@ -7,6 +7,8 @@ See the LICENSE file for details.
 package apis
 
 import (
+	"fmt"
+
 	"resty.dev/v3"
 )
 
@@ -70,10 +72,18 @@ func GetWhoisData(domain string) (*DomainInfo, error) {
 
 	result := &DomainInfo{}
 
-	_, err := client.R().
+	resp, err := client.R().
 		SetPathParam("domain", domain).
 		SetResult(result).
 		Get("/{domain}")
 
+	if err != nil {
+		return result, fmt.Errorf("error making who-dat api request")
+	}
+
+	if resp.IsError() {
+		return result, fmt.Errorf("error making who-dat api request, status code: %d", resp.StatusCode())
+
+	}
 	return result, err
 }
