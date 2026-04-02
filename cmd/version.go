@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"soc-cli/internal/util"
 
 	"github.com/spf13/cobra"
 )
@@ -40,9 +41,9 @@ func displayVersion(asJSON bool) {
 		fmt.Println(string(jsonData))
 
 	} else {
-		fmt.Printf("Version: %s\n", Version)
-		fmt.Printf("Commit: %s\n", Commit)
-		fmt.Printf("Date: %s\n", Date)
+		util.PrintEntry("Version", Version)
+		util.PrintEntry("Commit", Commit)
+		util.PrintEntry("Date", Date)
 	}
 
 }
