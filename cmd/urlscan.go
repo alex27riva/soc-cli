@@ -151,8 +151,8 @@ var urlScanCmd = &cobra.Command{
 			log.Fatalf("Error submitting URL for scan: %v", err)
 		}
 
-		color.Green("URL submitted successfully.")
-		color.Blue("Awaiting results...")
+		util.PrintSuccess("URL submitted successfully.")
+		util.PrintHeader("Awaiting results...")
 
 		// Fetch the scan results
 		scanResult, err := fetchURLScanResult(scanID)

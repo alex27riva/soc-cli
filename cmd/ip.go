@@ -37,7 +37,7 @@ func checkInput(input string) error {
 
 	ip := net.ParseIP(input)
 	if ip == nil {
-		color.Red("Invalid IP address.")
+		util.PrintError("Invalid IP address.")
 		os.Exit(1)
 	}
 
@@ -75,7 +75,7 @@ func analyzeIP(ip net.IP) {
 	missingKeys := checkAPIKeys()
 	if len(missingKeys) > 0 {
 		for _, msg := range missingKeys {
-			color.Yellow(msg)
+			util.PrintWarning(msg)
 		}
 	}
 
@@ -98,7 +98,7 @@ func analyzeIP(ip net.IP) {
 }
 
 func printIPInfo(ipInfoData *apis.IPInfo) {
-	color.Blue("IP information from IPInfo")
+	util.PrintHeader("IP information from IPInfo")
 	util.PrintEntry("IP", ipInfoData.IP)
 	util.PrintEntry("Hostname", ipInfoData.Hostname)
 	util.PrintEntry("Org", ipInfoData.Org)
@@ -108,7 +108,7 @@ func printIPInfo(ipInfoData *apis.IPInfo) {
 
 func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 	if greyNoiseData != nil {
-		color.Blue("\nGreyNoise Threat Intelligence")
+		util.PrintHeader("\nGreyNoise Threat Intelligence")
 
 		classification := strings.ToUpper(greyNoiseData.Classification)
 		switch classification {
@@ -131,7 +131,7 @@ func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 
 func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 	if abuseIPDBData != nil {
-		color.Blue("\nAbuseIPDB report")
+		util.PrintHeader("\nAbuseIPDB report")
 		if abuseIPDBData.Data.TotalReports == 0 {
 			fmt.Println("No reports found for this IP address")
 			return
@@ -174,7 +174,7 @@ var ipCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		input := args[0]
 		if err := checkInput(input); err != nil {
-			color.Red("Error: %v", err)
+			util.PrintError("Error: %v", err)
 			os.Exit(1)
 		}
 	},

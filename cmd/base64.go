@@ -9,8 +9,8 @@ package cmd
 import (
 	"encoding/base64"
 	"fmt"
+	"soc-cli/internal/util"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +34,7 @@ var b64dCmd = &cobra.Command{
 		base64Str := args[0]
 		decoded, err := base64.StdEncoding.DecodeString(base64Str)
 		if err != nil {
-			color.Red("Error decoding Base64 string: %v", err)
+			util.PrintError("Error decoding Base64 string: %v", err)
 		}
 		fmt.Println(string(decoded))
 	},

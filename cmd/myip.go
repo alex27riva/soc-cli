@@ -9,9 +9,9 @@ package cmd
 import (
 	"fmt"
 	"net"
+	"soc-cli/internal/util"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"resty.dev/v3"
 )
@@ -31,7 +31,7 @@ func getMyIP() net.IP {
 		SetHeaders(headers).
 		Get(url)
 	if err != nil {
-		color.Red("Error fetching API: %v", err)
+		util.PrintError("Error fetching API: %v", err)
 	}
 
 	ip := strings.TrimSpace(res.String())

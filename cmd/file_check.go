@@ -43,13 +43,13 @@ func init() {
 func checkFileOnVirusTotal(filePath string) {
 	apiKey := viper.GetString("api_keys.virustotal.api_key")
 	if apiKey == "" {
-		color.Red("VirusTotal API key missing! Please set it in the config file.")
+		util.PrintError("VirusTotal API key missing! Please set it in the config file.")
 		os.Exit(1)
 	}
 
 	hash, err := calculateSHA256(filePath)
 	if err != nil {
-		color.Red("Error calculating file hash: %v", err)
+		util.PrintError("Error calculating file hash: %v", err)
 		os.Exit(1)
 	}
 
@@ -70,7 +70,7 @@ func checkFileOnVirusTotal(filePath string) {
 		log.Fatalf("Error querying VirusTotal: %v", err)
 	}
 
-	color.Green("File already analyzed on VirusTotal.")
+	util.PrintSuccess("File already analyzed on VirusTotal.")
 	displayVirusTotalReport(fileObj)
 }
 
@@ -107,7 +107,7 @@ func uploadAndReport(client *vt.Client, filePath, hash string) {
 	}
 	defer f.Close()
 
-	color.Blue("Uploading file to VirusTotal for analysis...")
+	util.PrintHeader("Uploading file to VirusTotal for analysis...")
 	scanner := client.NewFileScanner()
 	analysis, err := scanner.ScanFile(f, nil)
 	if err != nil {
@@ -115,7 +115,7 @@ func uploadAndReport(client *vt.Client, filePath, hash string) {
 	}
 
 	analysisID := analysis.ID()
-	color.Blue("File uploaded. Waiting for analysis to complete...")
+	util.PrintHeader("File uploaded. Waiting for analysis to complete...")
 
 	for attempts := 0; attempts < 10; attempts++ {
 		time.Sleep(15 * time.Second)
@@ -138,7 +138,7 @@ func uploadAndReport(client *vt.Client, filePath, hash string) {
 		fmt.Printf("Analysis status: %s. Retrying in 15 seconds...\n", status)
 	}
 
-	color.Red("Report could not be retrieved within the timeout period.")
+	util.PrintError("Report could not be retrieved within the timeout period.")
 }
 
 func displayVirusTotalReport(file *vt.Object) {
@@ -157,7 +157,7 @@ func displayVirusTotalReport(file *vt.Object) {
 		verdict = color.GreenString(verdict)
 	}
 
-	color.Blue("\nVirusTotal Scan Report:")
+	util.PrintHeader("\nVirusTotal Scan Report:")
 	util.PrintEntry("Type", file.Type())
 	util.PrintEntry("Meaningful Name", meaningfulName)
 	util.PrintEntry("Magic", magic)
