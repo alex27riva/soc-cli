@@ -21,6 +21,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"soc-cli/internal/util"
 )
 
 const virusTotalFileGuiURL = "https://www.virustotal.com/gui/file/%s"
@@ -52,7 +53,7 @@ func checkFileOnVirusTotal(filePath string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("File SHA256: %s\n", hash)
+	util.PrintEntry("File SHA256", hash)
 
 	client := vt.NewClient(apiKey)
 
@@ -106,7 +107,7 @@ func uploadAndReport(client *vt.Client, filePath, hash string) {
 	}
 	defer f.Close()
 
-	fmt.Println("Uploading file to VirusTotal for analysis...")
+	color.Blue("Uploading file to VirusTotal for analysis...")
 	scanner := client.NewFileScanner()
 	analysis, err := scanner.ScanFile(f, nil)
 	if err != nil {
@@ -114,7 +115,7 @@ func uploadAndReport(client *vt.Client, filePath, hash string) {
 	}
 
 	analysisID := analysis.ID()
-	fmt.Println("File uploaded. Waiting for analysis to complete...")
+	color.Blue("File uploaded. Waiting for analysis to complete...")
 
 	for attempts := 0; attempts < 10; attempts++ {
 		time.Sleep(15 * time.Second)
@@ -149,11 +150,18 @@ func displayVirusTotalReport(file *vt.Object) {
 	suspicious, _ := file.GetInt64("last_analysis_stats.suspicious")
 	harmless, _ := file.GetInt64("last_analysis_stats.harmless")
 
-	color.Blue("VirusTotal Scan Report:")
-	fmt.Printf("\nType: %s\n", file.Type())
-	fmt.Printf("Meaningful Name: %s\n", meaningfulName)
-	fmt.Printf("Magic: %s\n", magic)
-	fmt.Printf("Reputation: %d\n", reputation)
-	fmt.Printf("Link: %s\n", fmt.Sprintf(virusTotalFileGuiURL, sha256Hash))
-	fmt.Printf("Analysis result: malicious %d, suspicious %d, harmless %d\n", malicious, suspicious, harmless)
+	verdict := fmt.Sprintf("malicious %d, suspicious %d, harmless %d", malicious, suspicious, harmless)
+	if malicious > 0 {
+		verdict = color.RedString(verdict)
+	} else {
+		verdict = color.GreenString(verdict)
+	}
+
+	color.Blue("\nVirusTotal Scan Report:")
+	util.PrintEntry("Type", file.Type())
+	util.PrintEntry("Meaningful Name", meaningfulName)
+	util.PrintEntry("Magic", magic)
+	util.PrintEntry("Reputation", int(reputation))
+	util.PrintEntry("Link", fmt.Sprintf(virusTotalFileGuiURL, sha256Hash))
+	util.PrintEntry("Analysis", verdict)
 }

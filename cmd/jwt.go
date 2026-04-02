@@ -8,7 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"soc-cli/internal/util"
 )
 
 var checkExpired bool
@@ -70,20 +72,20 @@ func DecodeJWT(token string, checkExpired bool) error {
 	headerJSON, _ := json.MarshalIndent(header, "", "  ")
 	payloadJSON, _ := json.MarshalIndent(payload, "", "  ")
 
-	fmt.Println("Header:")
+	color.Blue("Header:")
 	fmt.Println(string(headerJSON))
-	fmt.Println("\nPayload:")
+	color.Blue("\nPayload:")
 	fmt.Println(string(payloadJSON))
-	fmt.Println("\nClaims:")
+	color.Blue("\nClaims:")
 	for k, v := range payload {
-		fmt.Printf("  %s: %v\n", k, v)
+		util.PrintEntry(k, v)
 	}
 
 	// --- Expiration check ---
 	if checkExpired {
 		exp, ok := payload["exp"]
 		if !ok {
-			fmt.Println("\n⚠️  No 'exp' claim found in JWT.")
+			color.Yellow("\nWarning: No 'exp' claim found in JWT.")
 			os.Exit(1)
 		}
 
@@ -94,16 +96,16 @@ func DecodeJWT(token string, checkExpired bool) error {
 		case int64:
 			expTime = time.Unix(val, 0)
 		default:
-			fmt.Printf("\n⚠️  Invalid 'exp' format: %v\n", exp)
+			color.Yellow("\nWarning: Invalid 'exp' format: %v", exp)
 			os.Exit(1)
 		}
 
 		now := time.Now()
 		if now.After(expTime) {
-			fmt.Printf("\n❌ Token expired at %s (local time)\n", expTime.Local().Format(time.RFC3339))
+			color.Red("\nToken expired at %s", expTime.Local().Format(time.RFC3339))
 			os.Exit(1)
 		} else {
-			fmt.Printf("\n✅ Token is valid (expires at %s)\n", expTime.Local().Format(time.RFC3339))
+			color.Green("\nToken is valid (expires at %s)", expTime.Local().Format(time.RFC3339))
 		}
 	}
 

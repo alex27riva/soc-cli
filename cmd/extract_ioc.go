@@ -81,7 +81,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print IPs
 		if len(uniqueIPs) > 0 {
-			color.Green("\nIP Addresses:")
+			color.Blue("\nIP Addresses:")
 			for _, ip := range uniqueIPs {
 				fmt.Println(ip)
 			}
@@ -89,7 +89,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print URLs
 		if len(uniqueURLs) > 0 {
-			color.Green("\nURLs:")
+			color.Blue("\nURLs:")
 			for _, url := range uniqueURLs {
 				fmt.Println(url)
 			}
@@ -97,7 +97,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print Emails
 		if len(uniqueEmails) > 0 {
-			color.Green("\nEmail Addresses:")
+			color.Blue("\nEmail Addresses:")
 			for _, email := range uniqueEmails {
 				fmt.Println(email)
 			}
@@ -105,7 +105,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print Domains
 		if len(uniqueDomains) > 0 {
-			color.Green("\nDomains:")
+			color.Blue("\nDomains:")
 			for _, email := range uniqueDomains {
 				fmt.Println(email)
 			}
@@ -113,7 +113,7 @@ func extractIOCs(filePath string, asJSON bool) {
 
 		// Print SHA256 Hashes
 		if len(uniqueHashes) > 0 {
-			color.Green("\nSHA256 Hashes:")
+			color.Blue("\nSHA256 Hashes:")
 			for _, hash := range uniqueHashes {
 				fmt.Println(hash)
 			}

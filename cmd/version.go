@@ -33,7 +33,7 @@ func displayVersion(asJSON bool) {
 			Commit:  Commit,
 			Date:    Date,
 		}
-		jsonData, err := json.MarshalIndent(versionInfo, "", " ")
+		jsonData, err := json.MarshalIndent(versionInfo, "", "  ")
 		if err != nil {
 			log.Fatalf("Error marshalling JSON: %v", err)
 		}

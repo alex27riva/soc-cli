@@ -51,7 +51,7 @@ func analyzeEmail(filePath string) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		color.Red("Error opening file: %v", err)
 		return
 	}
 	defer file.Close()
@@ -59,7 +59,7 @@ func analyzeEmail(filePath string) {
 	// Parse the email message
 	msg, err := mail.ReadMessage(file)
 	if err != nil {
-		fmt.Println("Error parsing .eml file:", err)
+		color.Red("Error parsing .eml file: %v", err)
 		return
 	}
 
@@ -76,7 +76,8 @@ func analyzeEmail(filePath string) {
 	if authResults != "" {
 		extractDMARCDKIM(authResults)
 	} else {
-		fmt.Println("\nDMARC Information: No Authentication-Results header found.")
+		color.Blue("\nAuthentication Results:")
+		fmt.Println("No Authentication-Results header found.")
 	}
 
 	processEmailBody(msg)
@@ -128,7 +129,7 @@ func processMultipart(mr *multipart.Reader) {
 			break
 		}
 		if err != nil {
-			fmt.Println("Error reading part:", err)
+			color.Red("Error reading part: %v", err)
 			return
 		}
 
@@ -156,24 +157,23 @@ func processMultipart(mr *multipart.Reader) {
 // extractDMARCDKIM extracts DMARC and DKIM results from the Authentication-Results header
 func extractDMARCDKIM(authResults string) {
 	color.Blue("\nAuthentication Results:")
-	fmt.Println(authResults)
 
 	// Check for DKIM result
 	if strings.Contains(authResults, "dkim=pass") {
-		fmt.Println("DKIM:", color.GreenString("pass"))
+		util.PrintEntry("DKIM", color.GreenString("pass"))
 	} else if strings.Contains(authResults, "dkim=fail") {
-		fmt.Println("DKIM:", color.RedString("fail"))
+		util.PrintEntry("DKIM", color.RedString("fail"))
 	} else {
-		fmt.Println("DKIM: No DKIM result found.")
+		util.PrintEntry("DKIM", "no result found")
 	}
 
 	// Check for DMARC result
 	if strings.Contains(authResults, "dmarc=pass") {
-		fmt.Println("DMARC:", color.GreenString("pass"))
+		util.PrintEntry("DMARC", color.GreenString("pass"))
 	} else if strings.Contains(authResults, "dmarc=fail") {
-		fmt.Println("DMARC:", color.RedString("fail"))
+		util.PrintEntry("DMARC", color.RedString("fail"))
 	} else {
-		fmt.Println("DMARC: No DMARC result found.")
+		util.PrintEntry("DMARC", "no result found")
 	}
 }
 
@@ -197,12 +197,12 @@ func handleAttachment(part *multipart.Part, contentType string) {
 		fileName = "unnamed attachment"
 	}
 
-	fmt.Printf("Attachment: %s (MIME type: %s)\n", fileName, contentType)
+	util.PrintEntry("Attachment", fmt.Sprintf("%s (%s)", fileName, contentType))
 }
 
 func handleError(err error, message string) {
 	if err != nil {
-		fmt.Println(message, err)
+		color.Red("%s %v", message, err)
 	}
 }
 
@@ -225,9 +225,10 @@ func printEmailHeaders(msg *mail.Message) {
 }
 
 func printHeaderInfo(headerValue, headerName string) {
+	color.Blue("\n%s:", headerName)
 	if headerValue != "" {
-		fmt.Println(color.BlueString("\n%s:\n", headerName), headerValue)
+		fmt.Println(headerValue)
 	} else {
-		fmt.Println(color.BlueString("\n%s:\n", headerName) + "No information found.")
+		fmt.Println("No information found.")
 	}
 }
