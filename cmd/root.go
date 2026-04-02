@@ -13,9 +13,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "soc",
-	Short: "A cli tool for SoC analysts",
-	Long: `soc-cli is a comprehensive command-line application designed for security analysts to streamline threat analysis and incident response.
-From IP analysis to IOC extraction, file scanning, and URL defanging, soc-cli offers various commands to support daily tasks in security operations centers.`,
+	Short: "A cli tool for Secuiry Analysts",
+	Long: `soc-cli is a CLI tool for security analysts supporting IP analysis, IOC extraction, file scans, URL defanging, and more.`,
 }
 
 func Execute() {
