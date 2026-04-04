@@ -139,8 +139,9 @@ func displayResults(scanResult urlScanResult) {
 }
 
 var urlScanCmd = &cobra.Command{
-	Use:   "urlscan [url]",
-	Short: "Submit a URL for malware scanning and fetch the results",
+	Use:     "url-scan <url>",
+	Aliases: []string{"urlscan"},
+	Short:   "Submit a URL to urlscan.io and retrieve the scan results",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		url := args[0]

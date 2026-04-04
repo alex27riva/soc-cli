@@ -168,7 +168,7 @@ func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 }
 
 var ipCmd = &cobra.Command{
-	Use:   "ip [ipv4]",
+	Use:   "ip <address>",
 	Short: "Analyze an IP address for geolocation, ASN, and threat status",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {

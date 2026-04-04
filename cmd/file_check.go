@@ -29,7 +29,7 @@ const virusTotalFileGuiURL = "https://www.virustotal.com/gui/file/%s"
 // fileCheckCmd represents the file-check command
 var fileCheckCmd = &cobra.Command{
 	Use:   "file-check [file]",
-	Short: "Check file for suspicious content and upload to VirusTotal if not present",
+	Short: "Scan a file for threats using VirusTotal",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		checkFileOnVirusTotal(args[0])
