@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	Version string
-	Commit  string
-	Date    string
+	Version = "dev"
+	Commit  = "none"
+	Date    = "unknown"
 )
 
 type VersionInfo struct {
