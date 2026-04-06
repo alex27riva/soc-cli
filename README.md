@@ -16,7 +16,17 @@ Built with Go, this tool provides a variety of commands to simplify threat intel
 - **Defang / Fang**: Defang or re-fang URLs and email addresses for safe sharing in reports.
 - **Strings**: Extract printable strings from a file.
 
+## Quick Start
+
+```bash
+go install github.com/alex27riva/soc-cli@latest
+```
+
+Requires Go 1.18+. The binary will be placed in `$GOPATH/bin` (make sure it's in your `$PATH`).
+
 ## Installation
+
+### From source
 
 1. **Clone the repository**:
 
@@ -37,28 +47,21 @@ Built with Go, this tool provides a variety of commands to simplify threat intel
     ./soc-cli
     ```
 
-<!-- Alternatively, you can download a pre-built binary from the [releases](https://github.com/alex27riva/soc-cli/releases) page. -->
-
 ## Configuration
 
-The tool reads API keys and other configuration settings from a config file located in `~/.config/soc-cli/config.yaml`.
-On Windows the path is `%USERPROFILE%/.config/soc-cli/config.yaml`
+Use the `config set` command to configure API keys for the services you need:
 
-Example structure:
-
-```yaml
-api_keys:
-  urlscan:
-    api_key: your-urlscan-api-key
-  ipinfo:
-    api_key: your-ipinfo-api-key
-  greynoise:
-    api_key: your-greynoise-api-key
-  abuseipdb:
-    api_key: your-abuseipdb-api-key
-  virustotal:
-    api_key: your-virustotal-api-key
+```bash
+soc-cli config set ipinfo <api-key>
+soc-cli config set greynoise <api-key>
+soc-cli config set abuseipdb <api-key>
+soc-cli config set urlscan <api-key>
+soc-cli config set virustotal <api-key>
 ```
+
+To view configured keys: `soc-cli config list`
+
+Config is stored at `~/.config/soc-cli/config.yaml` (Windows: `%USERPROFILE%/.config/soc-cli/config.yaml`).
 
 ## Usage
 
@@ -86,12 +89,12 @@ Extract IOCs from a text file.
 soc-cli extract-ioc <file_path>
 ```
 
-`urlscan`
+`url-scan`
 
 Submit a URL for scanning and analysis.
 
 ```bash
-soc-cli urlscan <URL>
+soc-cli url-scan <URL>
 ```
 
 `defang` and `fang`
@@ -181,7 +184,7 @@ soc-cli ip 8.8.8.8
 soc-cli extract-ioc logs.txt
 
 # Submit a URL for threat intelligence
-soc-cli urlscan https://example.com
+soc-cli url-scan https://example.com
 
 # Check a file against VirusTotal
 soc-cli file-check /path/to/malware.exe
