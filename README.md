@@ -49,14 +49,14 @@ Requires Go 1.18+. The binary will be placed in `$GOPATH/bin` (make sure it's in
 
 ## Configuration
 
-Use the `config set` command to configure API keys for the services you need:
+Use the `config set` command to configure API keys for the services you need. The key is prompted interactively and not echoed, so it won't appear in shell history:
 
 ```bash
-soc-cli config set ipinfo <api-key>
-soc-cli config set greynoise <api-key>
-soc-cli config set abuseipdb <api-key>
-soc-cli config set urlscan <api-key>
-soc-cli config set virustotal <api-key>
+soc-cli config set ipinfo
+soc-cli config set greynoise
+soc-cli config set abuseipdb
+soc-cli config set urlscan
+soc-cli config set virustotal
 ```
 
 To view configured keys: `soc-cli config list`

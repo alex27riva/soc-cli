@@ -14,6 +14,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/term"
 	"soc-cli/internal/util"
 )
 
@@ -72,15 +73,27 @@ var configListCmd = &cobra.Command{
 }
 
 var configSetCmd = &cobra.Command{
-	Use:   "set <service> <api-key>",
-	Short: "Set an API key for a service",
-	Args:  cobra.ExactArgs(2),
+	Use:   "set <service>",
+	Short: "Set an API key for a service (prompted securely, not echoed)",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		service := strings.ToLower(args[0])
-		apiKey := args[1]
 
 		if !isKnownService(service) {
 			util.PrintError("Unknown service %q. Known services: %s", service, strings.Join(knownServices, ", "))
+			os.Exit(1)
+		}
+
+		fmt.Printf("Enter API key for %q: ", service)
+		keyBytes, err := term.ReadPassword(int(os.Stdin.Fd()))
+		fmt.Println()
+		if err != nil {
+			util.PrintError("Failed to read API key: %v", err)
+			os.Exit(1)
+		}
+		apiKey := strings.TrimSpace(string(keyBytes))
+		if apiKey == "" {
+			util.PrintError("API key cannot be empty.")
 			os.Exit(1)
 		}
 
