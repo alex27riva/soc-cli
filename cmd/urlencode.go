@@ -33,7 +33,7 @@ var urlEncodeCmd = &cobra.Command{
 			}
 			input = strings.TrimRight(string(data), "\n")
 		}
-		fmt.Println(url.QueryEscape(input))
+		fmt.Println(url.PathEscape(input))
 	},
 }
 

@@ -187,7 +187,7 @@ func extractLinks(body string) {
 			fmt.Println("-", link)
 		}
 	} else {
-		util.PrintHeader("\nNo links found in the email.")
+		util.PrintWarning("\nNo links found in the email.")
 	}
 }
 
