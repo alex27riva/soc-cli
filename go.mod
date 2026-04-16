@@ -1,8 +1,6 @@
 module soc-cli
 
-go 1.24.0
-
-toolchain go1.24.7
+go 1.26.2
 
 require (
 	github.com/VirusTotal/vt-go v1.1.0
