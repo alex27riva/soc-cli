@@ -12,8 +12,8 @@ import (
 	"log"
 	"os"
 	"soc-cli/internal/logic"
+	"soc-cli/internal/util"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
 
@@ -60,9 +60,9 @@ func showHashes(filePath string, asJson bool) {
 
 	} else {
 
-		fmt.Println(color.GreenString("MD5:"), md5Digest)
-		fmt.Println(color.GreenString("SHA1:"), sha1Digest)
-		fmt.Println(color.GreenString("SHA256:"), sha256Digest)
+		util.PrintEntry("MD5", md5Digest)
+		util.PrintEntry("SHA1", sha1Digest)
+		util.PrintEntry("SHA256", sha256Digest)
 
 	}
 

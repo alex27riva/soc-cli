@@ -12,8 +12,8 @@ import (
 
 var miscCmd = &cobra.Command{
 	Use:   "misc",
-	Short: "Miscellaneous utilities",
-	Long:  "A collection of miscellaneous utilities for various tasks.",
+	Short: "Miscellaneous network and system utilities",
+	Long:  "A collection of miscellaneous utilities including network helpers like myip.",
 }
 
 func init() {

@@ -9,9 +9,9 @@ package cmd
 import (
 	"fmt"
 	"net"
+	"soc-cli/internal/util"
 	"strings"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"resty.dev/v3"
 )
@@ -31,7 +31,7 @@ func getMyIP() net.IP {
 		SetHeaders(headers).
 		Get(url)
 	if err != nil {
-		color.Red("Error fetching API: %v", err)
+		util.PrintError("Error fetching API: %v", err)
 	}
 
 	ip := strings.TrimSpace(res.String())
@@ -40,8 +40,8 @@ func getMyIP() net.IP {
 
 var myipCmd = &cobra.Command{
 	Use:   "myip",
-	Short: "Get your ip address",
-	Long:  "Get your ip address using ip.me API",
+	Short: "Show your public IP address",
+	Long:  "Fetches and displays your public IP address using the ip.me API.",
 	Run: func(cmd *cobra.Command, args []string) {
 		ip := getMyIP()
 		fmt.Println(ip)

@@ -15,6 +15,22 @@ import (
 	"strings"
 )
 
+func PrintHeader(format string, a ...interface{}) {
+	color.Blue(format, a...)
+}
+
+func PrintError(format string, a ...interface{}) {
+	color.Red(format, a...)
+}
+
+func PrintSuccess(format string, a ...interface{}) {
+	color.Green(format, a...)
+}
+
+func PrintWarning(format string, a ...interface{}) {
+	color.Yellow(format, a...)
+}
+
 func PrintEntry(entryName string, entryValue interface{}) {
 	if entryValue != nil {
 		switch v := entryValue.(type) {

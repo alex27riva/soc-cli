@@ -51,7 +51,7 @@ func analyzeEmail(filePath string) {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		util.PrintError("Error opening file: %v", err)
 		return
 	}
 	defer file.Close()
@@ -59,7 +59,7 @@ func analyzeEmail(filePath string) {
 	// Parse the email message
 	msg, err := mail.ReadMessage(file)
 	if err != nil {
-		fmt.Println("Error parsing .eml file:", err)
+		util.PrintError("Error parsing .eml file: %v", err)
 		return
 	}
 
@@ -76,7 +76,8 @@ func analyzeEmail(filePath string) {
 	if authResults != "" {
 		extractDMARCDKIM(authResults)
 	} else {
-		fmt.Println("\nDMARC Information: No Authentication-Results header found.")
+		util.PrintHeader("\nAuthentication Results:")
+		fmt.Println("No Authentication-Results header found.")
 	}
 
 	processEmailBody(msg)
@@ -85,7 +86,7 @@ func analyzeEmail(filePath string) {
 // isValidEmlFile checks if the provided file path has a valid .eml extension
 func isValidEmlFile(filePath string) bool {
 	if !strings.HasSuffix(strings.ToLower(filePath), emlExtension) {
-		color.Red("The provided file is not an .eml file.")
+		util.PrintError("The provided file is not an .eml file.")
 		return false
 	}
 	return true
@@ -128,7 +129,7 @@ func processMultipart(mr *multipart.Reader) {
 			break
 		}
 		if err != nil {
-			fmt.Println("Error reading part:", err)
+			util.PrintError("Error reading part: %v", err)
 			return
 		}
 
@@ -138,7 +139,7 @@ func processMultipart(mr *multipart.Reader) {
 		// If it's an attachment, list it
 		if strings.Contains(disposition, "attachment") {
 			if !attachmentsFound {
-				color.Blue("\nAttachments:")
+				util.PrintHeader("\nAttachments:")
 				attachmentsFound = true
 			}
 			handleAttachment(part, contentType)
@@ -155,25 +156,24 @@ func processMultipart(mr *multipart.Reader) {
 
 // extractDMARCDKIM extracts DMARC and DKIM results from the Authentication-Results header
 func extractDMARCDKIM(authResults string) {
-	color.Blue("\nAuthentication Results:")
-	fmt.Println(authResults)
+	util.PrintHeader("\nAuthentication Results:")
 
 	// Check for DKIM result
 	if strings.Contains(authResults, "dkim=pass") {
-		fmt.Println("DKIM:", color.GreenString("pass"))
+		util.PrintEntry("DKIM", color.GreenString("pass"))
 	} else if strings.Contains(authResults, "dkim=fail") {
-		fmt.Println("DKIM:", color.RedString("fail"))
+		util.PrintEntry("DKIM", color.RedString("fail"))
 	} else {
-		fmt.Println("DKIM: No DKIM result found.")
+		util.PrintEntry("DKIM", "no result found")
 	}
 
 	// Check for DMARC result
 	if strings.Contains(authResults, "dmarc=pass") {
-		fmt.Println("DMARC:", color.GreenString("pass"))
+		util.PrintEntry("DMARC", color.GreenString("pass"))
 	} else if strings.Contains(authResults, "dmarc=fail") {
-		fmt.Println("DMARC:", color.RedString("fail"))
+		util.PrintEntry("DMARC", color.RedString("fail"))
 	} else {
-		fmt.Println("DMARC: No DMARC result found.")
+		util.PrintEntry("DMARC", "no result found")
 	}
 }
 
@@ -182,12 +182,12 @@ func extractLinks(body string) {
 	links := util.URLRegex.FindAllString(body, -1)
 
 	if len(links) > 0 {
-		color.Blue("\nLinks found in the email:")
+		util.PrintHeader("\nLinks found in the email:")
 		for _, link := range links {
 			fmt.Println("-", link)
 		}
 	} else {
-		color.Blue("\nNo links found in the email.")
+		util.PrintWarning("\nNo links found in the email.")
 	}
 }
 
@@ -197,12 +197,12 @@ func handleAttachment(part *multipart.Part, contentType string) {
 		fileName = "unnamed attachment"
 	}
 
-	fmt.Printf("Attachment: %s (MIME type: %s)\n", fileName, contentType)
+	util.PrintEntry("Attachment", fmt.Sprintf("%s (%s)", fileName, contentType))
 }
 
 func handleError(err error, message string) {
 	if err != nil {
-		fmt.Println(message, err)
+		util.PrintError("%s %v", message, err)
 	}
 }
 
@@ -213,7 +213,7 @@ func printHeader(headerName, headerValue string) {
 }
 
 func printEmailHeaders(msg *mail.Message) {
-	color.Blue("Main information:")
+	util.PrintHeader("Main information:")
 	printHeader("From", msg.Header.Get("From"))
 	printHeader("To", msg.Header.Get("To"))
 	printHeader("Cc", msg.Header.Get("Cc"))
@@ -225,9 +225,10 @@ func printEmailHeaders(msg *mail.Message) {
 }
 
 func printHeaderInfo(headerValue, headerName string) {
+	util.PrintHeader("\n%s:", headerName)
 	if headerValue != "" {
-		fmt.Println(color.BlueString("\n%s:\n", headerName), headerValue)
+		fmt.Println(headerValue)
 	} else {
-		fmt.Println(color.BlueString("\n%s:\n", headerName) + "No information found.")
+		fmt.Println("No information found.")
 	}
 }

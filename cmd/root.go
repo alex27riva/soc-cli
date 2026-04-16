@@ -13,8 +13,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "soc",
-	Short: "A cli tool for Secuiry Analysts",
-	Long: `soc-cli is a CLI tool for security analysts supporting IP analysis, IOC extraction, file scans, URL defanging, and more.`,
+	Short: "A CLI tool for Security Operations Center (SOC) analysts",
+	Long: `soc-cli is a CLI tool for SOC analysts. It supports IP analysis, IOC extraction, file scanning, URL defanging/fanging, encoding/decoding, and more.`,
 }
 
 func Execute() {

@@ -9,11 +9,12 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
+	"soc-cli/internal/util"
 	"unicode"
+
+	"github.com/spf13/cobra"
 )
 
 var minLength int
@@ -47,7 +48,7 @@ func extractStrings(filePath string) {
 	reader := bufio.NewReader(file)
 	var result []rune
 
-	color.Blue("Extracting strings from file: %s (Minimum length: %d)\n", filePath, minLength)
+	util.PrintHeader("Extracting strings from file: %s (Minimum length: %d)\n", filePath, minLength)
 
 	for {
 		char, _, err := reader.ReadRune()
