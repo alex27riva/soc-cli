@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 Alessandro Riva
+Copyright © 2026 Alessandro Riva
 
 Licensed under the MIT License.
 See the LICENSE file for details.
@@ -7,9 +7,9 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"soc-cli/internal/util"
 	"strings"
@@ -17,9 +17,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var b64eCmd = &cobra.Command{
-	Use:   "base64 [string-to-encode]",
-	Short: "Encode a string to Base64",
+var urlEncodeCmd = &cobra.Command{
+	Use:   "url [string-to-encode]",
+	Short: "URL-encode a string",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		var input string
@@ -33,39 +33,36 @@ var b64eCmd = &cobra.Command{
 			}
 			input = strings.TrimRight(string(data), "\n")
 		}
-		encoded := base64.StdEncoding.EncodeToString([]byte(input))
-		fmt.Println(encoded)
+		fmt.Println(url.QueryEscape(input))
 	},
-	Aliases: []string{"b64"},
 }
 
-var b64dCmd = &cobra.Command{
-	Use:   "base64 [base64-string]",
-	Short: "Decode a Base64 string",
+var urlDecodeCmd = &cobra.Command{
+	Use:   "url [url-encoded-string]",
+	Short: "URL-decode a string",
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		var base64Str string
+		var input string
 		if len(args) == 1 {
-			base64Str = args[0]
+			input = args[0]
 		} else {
 			data, err := io.ReadAll(os.Stdin)
 			if err != nil {
 				util.PrintError("Error reading from stdin: %v", err)
 				return
 			}
-			base64Str = strings.TrimRight(string(data), "\n")
+			input = strings.TrimRight(string(data), "\n")
 		}
-		decoded, err := base64.StdEncoding.DecodeString(base64Str)
+		decoded, err := url.QueryUnescape(input)
 		if err != nil {
-			util.PrintError("Error decoding Base64 string: %v", err)
+			util.PrintError("Error decoding URL-encoded string: %v", err)
 			return
 		}
-		fmt.Println(string(decoded))
+		fmt.Println(decoded)
 	},
-	Aliases: []string{"b64"},
 }
 
 func init() {
-	encodeCmd.AddCommand(b64eCmd)
-	decodeCmd.AddCommand(b64dCmd)
+	encodeCmd.AddCommand(urlEncodeCmd)
+	decodeCmd.AddCommand(urlDecodeCmd)
 }

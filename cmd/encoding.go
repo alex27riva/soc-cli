@@ -20,16 +20,16 @@ func showHelp(cmd *cobra.Command, args []string) error {
 
 var encodeCmd = &cobra.Command{
 	Use:     "encode",
-	Short:   "Encode data (Base64, and more)",
-	Long:    "Encoding utilities. Currently supports Base64.",
+	Short:   "Encode data (Base64, URL, and more)",
+	Long:    "Encoding utilities. Currently supports Base64 and URL encoding.",
 	Aliases: []string{"enc", "en", "e"},
 	RunE:    showHelp,
 }
 
 var decodeCmd = &cobra.Command{
 	Use:     "decode",
-	Short:   "Decode data (Base64, JWT, and more)",
-	Long:    "Decoding utilities. Currently supports Base64 and JWT.",
+	Short:   "Decode data (Base64, URL, JWT, and more)",
+	Long:    "Decoding utilities. Currently supports Base64, URL decoding, and JWT.",
 	Aliases: []string{"dec", "de", "d"},
 	RunE:    showHelp,
 }
