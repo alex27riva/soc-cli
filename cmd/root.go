@@ -9,9 +9,12 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"soc-cli/internal/config"
 
 	"github.com/spf13/cobra"
 )
+
+var cfgFile string
 
 func printSplash() {
 	fmt.Printf(`
@@ -28,6 +31,9 @@ var rootCmd = &cobra.Command{
 	Use:   "soc",
 	Short: "A CLI tool for Security Operations Center (SOC) analysts",
 	Long:  `soc-cli is a CLI tool for SOC analysts. It supports IP analysis, IOC extraction, file scanning, URL defanging/fanging, encoding/decoding, and more.`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		return config.InitConfig(cfgFile)
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		printSplash()
 		_ = cmd.Help()
@@ -42,4 +48,5 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "Config file path (default ~/.config/soc-cli/config.yaml)")
 }
