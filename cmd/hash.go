@@ -9,63 +9,36 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
 
 	"github.com/spf13/cobra"
 )
 
-type hashOutput struct {
-	MD5    string `json:"MD5"`
-	SHA1   string `json:"SHA1"`
-	SHA256 string `json:"SHA256"`
-}
-
-func openFile(filePath string) (*os.File, error) {
-	file, err := os.Open(filePath)
+func showHashes(filePath string, asJSON bool) {
+	results, err := logic.HashFile(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
+		util.PrintError("%v", err)
+		return
 	}
 
-	return file, nil
-}
-
-func showHashes(filePath string, asJson bool) {
-	file, err := openFile(filePath)
-	if err != nil {
-		fmt.Printf("Error opening file %v", err)
-	}
-
-	defer file.Close()
-
-	md5Digest := logic.ComputeFileMd5(file)
-	sha1Digest := logic.ComputeFileSha1(file)
-	sha256Digest := logic.ComputeFileSha256(file)
-
-	if asJson {
-
-		hashData := hashOutput{
-			MD5:    md5Digest,
-			SHA1:   sha1Digest,
-			SHA256: sha256Digest}
-
-		// Marshal to JSON and print
-		jsonData, err := json.MarshalIndent(hashData, "", "  ")
+	if asJSON {
+		m := make(map[string]string, len(results))
+		for _, r := range results {
+			m[r.Name] = r.Hex
+		}
+		jsonData, err := json.MarshalIndent(m, "", "  ")
 		if err != nil {
-			log.Fatalf("Error marshalling JSON: %v", err)
+			util.PrintError("Error marshalling JSON: %v", err)
+			return
 		}
 		fmt.Println(string(jsonData))
-
-	} else {
-
-		util.PrintEntry("MD5", md5Digest)
-		util.PrintEntry("SHA1", sha1Digest)
-		util.PrintEntry("SHA256", sha256Digest)
-
+		return
 	}
 
+	for _, r := range results {
+		util.PrintEntry(r.Name, r.Hex)
+	}
 }
 
 var hashCmd = &cobra.Command{
@@ -73,9 +46,8 @@ var hashCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Short: "Calculate file hashes",
 	Run: func(cmd *cobra.Command, args []string) {
-		filePath := args[0]
 		asJSON, _ := cmd.Flags().GetBool("json")
-		showHashes(filePath, asJSON)
+		showHashes(args[0], asJSON)
 	},
 }
 

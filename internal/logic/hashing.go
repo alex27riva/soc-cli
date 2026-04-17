@@ -11,40 +11,59 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 	"fmt"
+	"hash"
 	"io"
-	"log"
 	"os"
 )
 
-func ComputeFileMd5(file *os.File) string {
-	hmd5 := md5.New()
-	file.Seek(0, 0)
-	if _, err := io.Copy(hmd5, file); err != nil {
-		log.Fatal("failed to calculate MD5 of file: %w", err)
-	}
-	hashmd5 := hmd5.Sum(nil)
-	hexmd5 := fmt.Sprintf("%x", hashmd5)
-	return hexmd5
+type HashAlgorithm struct {
+	Name string
+	New  func() hash.Hash
 }
 
-func ComputeFileSha1(file *os.File) string {
-	h1 := sha1.New()
-	file.Seek(0, 0)
-	if _, err := io.Copy(h1, file); err != nil {
-		log.Fatal("failed to calculate SHA1 of file: %w", err)
-	}
-	hashsha1 := h1.Sum(nil)
-	hex1 := fmt.Sprintf("%x", hashsha1)
-	return hex1
+// HashAlgorithms lists the algorithms computed by HashFile, in output order.
+// Register a new algorithm by appending to this slice.
+var HashAlgorithms = []HashAlgorithm{
+	{Name: "MD5", New: md5.New},
+	{Name: "SHA1", New: sha1.New},
+	{Name: "SHA256", New: sha256.New},
 }
 
-func ComputeFileSha256(file *os.File) string {
-	h256 := sha256.New()
-	file.Seek(0, 0)
-	if _, err := io.Copy(h256, file); err != nil {
-		log.Fatal("failed to calculate SHA256 of file: %w", err)
+type HashResult struct {
+	Name string
+	Hex  string
+}
+
+// HashFile opens path and returns the hex digest of every registered
+// algorithm, computed in a single read pass.
+func HashFile(path string) ([]HashResult, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
 	}
-	hash256 := h256.Sum(nil)
-	hex256 := fmt.Sprintf("%x", hash256)
-	return hex256
+	defer f.Close()
+
+	return HashReader(f)
+}
+
+// HashReader computes the hex digest of every registered algorithm for the
+// contents of r in a single read pass.
+func HashReader(r io.Reader) ([]HashResult, error) {
+	hashers := make([]hash.Hash, len(HashAlgorithms))
+	writers := make([]io.Writer, len(HashAlgorithms))
+	for i, a := range HashAlgorithms {
+		h := a.New()
+		hashers[i] = h
+		writers[i] = h
+	}
+
+	if _, err := io.Copy(io.MultiWriter(writers...), r); err != nil {
+		return nil, fmt.Errorf("read: %w", err)
+	}
+
+	results := make([]HashResult, len(HashAlgorithms))
+	for i, a := range HashAlgorithms {
+		results[i] = HashResult{Name: a.Name, Hex: fmt.Sprintf("%x", hashers[i].Sum(nil))}
+	}
+	return results, nil
 }
