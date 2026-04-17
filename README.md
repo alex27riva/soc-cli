@@ -1,5 +1,9 @@
 # soc-cli
 
+<p align="center">
+  <img src="assets/mascotte.jpg" alt="soc-cli mascot" width="200"/>
+</p>
+
 `soc-cli` is a command-line tool designed for SOC analysts (Security Operations Center) to aid in IP analysis, IOC extraction, URL scanning, and more.
 Built with Go, this tool provides a variety of commands to simplify threat intelligence workflows.
 
