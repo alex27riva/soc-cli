@@ -16,8 +16,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func showHashes(filePath string, asJSON bool) {
-	results, err := logic.HashFile(filePath)
+func showHashes(filePath string, asJSON, showDeprecated bool) {
+	algos := logic.HashAlgorithms
+	if !showDeprecated {
+		filtered := make([]logic.HashAlgorithm, 0, len(algos))
+		for _, a := range algos {
+			if !a.Deprecated {
+				filtered = append(filtered, a)
+			}
+		}
+		algos = filtered
+	}
+
+	results, err := logic.HashFileWith(filePath, algos)
 	if err != nil {
 		util.PrintError("%v", err)
 		return
@@ -51,11 +62,13 @@ var hashCmd = &cobra.Command{
 	Short: "Calculate file hashes",
 	Run: func(cmd *cobra.Command, args []string) {
 		asJSON, _ := cmd.Flags().GetBool("json")
-		showHashes(args[0], asJSON)
+		showDeprecated, _ := cmd.Flags().GetBool("show-deprecated")
+		showHashes(args[0], asJSON, showDeprecated)
 	},
 }
 
 func init() {
 	hashCmd.Flags().Bool("json", false, "Output hashes in JSON format")
+	hashCmd.Flags().BoolP("show-deprecated", "d", false, "Also compute deprecated hashes (MD5, SHA1)")
 	rootCmd.AddCommand(hashCmd)
 }
