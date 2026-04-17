@@ -46,7 +46,7 @@ func isKnownService(service string) bool {
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Manage API keys in the config file",
-	RunE:  showHelp,
+	RunE:  helpOrUnknown,
 }
 
 var configListCmd = &cobra.Command{
