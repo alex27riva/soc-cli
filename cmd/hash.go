@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func showHashes(filePath string, asJSON, showDeprecated bool) {
@@ -62,7 +63,11 @@ var hashCmd = &cobra.Command{
 	Short: "Calculate file hashes",
 	Run: func(cmd *cobra.Command, args []string) {
 		asJSON, _ := cmd.Flags().GetBool("json")
-		showDeprecated, _ := cmd.Flags().GetBool("show-deprecated")
+		// Flag overrides config; otherwise fall back to hash.show_deprecated.
+		showDeprecated := viper.GetBool("hash.show_deprecated")
+		if cmd.Flags().Changed("show-deprecated") {
+			showDeprecated, _ = cmd.Flags().GetBool("show-deprecated")
+		}
 		showHashes(args[0], asJSON, showDeprecated)
 	},
 }

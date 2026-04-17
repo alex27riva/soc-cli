@@ -50,6 +50,8 @@ The project follows a Cobra + Viper CLI pattern:
 
 User config lives at `~/.config/soc-cli/config.yaml` (Windows: `%USERPROFILE%/.config/soc-cli/config.yaml`). All five external API keys are stored there. The config is initialized automatically on first run.
 
+**Do not read or print the contents of `~/.config/soc-cli/config.yaml` (or any other file under `~/.config/soc-cli/`).** It holds live API keys for urlscan, ipinfo, greynoise, abuseipdb, and virustotal. Pulling its contents into the conversation leaks secrets into transcripts that may be cached or logged. If you need to know the config *schema*, read `internal/config/config.go` — it enumerates every key via `viper.SetDefault`.
+
 ### Adding a New Command
 
 1. Create `cmd/<name>.go` with a `cobra.Command` and register it in its `init()` via `rootCmd.AddCommand(...)`.

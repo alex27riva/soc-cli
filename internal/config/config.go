@@ -44,6 +44,8 @@ func InitConfig() error {
 	viper.SetDefault("api_keys.abuseipdb.api_key", "")
 	viper.SetDefault("api_keys.virustotal.api_key", "")
 
+	viper.SetDefault("hash.show_deprecated", false)
+
 	if err := viper.SafeWriteConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
 			slog.Debug("Config file already exists, reading existing config")
