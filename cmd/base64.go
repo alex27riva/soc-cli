@@ -7,10 +7,10 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
+	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
 	"strings"
 
@@ -33,8 +33,7 @@ var b64eCmd = &cobra.Command{
 			}
 			input = strings.TrimRight(string(data), "\n")
 		}
-		encoded := base64.StdEncoding.EncodeToString([]byte(input))
-		fmt.Println(encoded)
+		fmt.Println(logic.Base64Encode(input))
 	},
 	Aliases: []string{"b64"},
 }
@@ -55,12 +54,12 @@ var b64dCmd = &cobra.Command{
 			}
 			base64Str = strings.TrimRight(string(data), "\n")
 		}
-		decoded, err := base64.StdEncoding.DecodeString(base64Str)
+		decoded, err := logic.Base64Decode(base64Str)
 		if err != nil {
 			util.PrintError("Error decoding Base64 string: %v", err)
 			return
 		}
-		fmt.Println(string(decoded))
+		fmt.Println(decoded)
 	},
 	Aliases: []string{"b64"},
 }
