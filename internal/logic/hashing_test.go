@@ -21,6 +21,7 @@ var hashVectors = []struct {
 	md5    string
 	sha1   string
 	sha256 string
+	blake3 string
 }{
 	{
 		name:   "empty",
@@ -28,6 +29,7 @@ var hashVectors = []struct {
 		md5:    "d41d8cd98f00b204e9800998ecf8427e",
 		sha1:   "da39a3ee5e6b4b0d3255bfef95601890afd80709",
 		sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+		blake3: "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
 	},
 	{
 		name:   "hello",
@@ -35,6 +37,7 @@ var hashVectors = []struct {
 		md5:    "5d41402abc4b2a76b9719d911017c592",
 		sha1:   "aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d",
 		sha256: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+		blake3: "ea8f163db38682925e4491c5e58d4bb3506ef8c14eb78a86e908c5624a67200f",
 	},
 	{
 		name:   "abc",
@@ -42,6 +45,7 @@ var hashVectors = []struct {
 		md5:    "900150983cd24fb0d6963f7d28e17f72",
 		sha1:   "a9993e364706816aba3e25717850c26c9cd0d89d",
 		sha256: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+		blake3: "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85",
 	},
 }
 
@@ -69,6 +73,9 @@ func TestHashReader(t *testing.T) {
 			}
 			if got := byAlgo(results, "SHA256"); got != tc.sha256 {
 				t.Errorf("SHA256 = %q, want %q", got, tc.sha256)
+			}
+			if got := byAlgo(results, "BLAKE3"); got != tc.blake3 {
+				t.Errorf("BLAKE3 = %q, want %q", got, tc.blake3)
 			}
 		})
 	}

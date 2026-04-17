@@ -15,6 +15,8 @@ import (
 	"io"
 	"os"
 	"sync"
+
+	"lukechampine.com/blake3"
 )
 
 type HashAlgorithm struct {
@@ -28,6 +30,7 @@ var HashAlgorithms = []HashAlgorithm{
 	{Name: "MD5", New: md5.New},
 	{Name: "SHA1", New: sha1.New},
 	{Name: "SHA256", New: sha256.New},
+	{Name: "BLAKE3", New: func() hash.Hash { return blake3.New(32, nil) }},
 }
 
 type HashResult struct {

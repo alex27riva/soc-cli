@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -23,16 +24,19 @@ func showHashes(filePath string, asJSON bool) {
 	}
 
 	if asJSON {
-		m := make(map[string]string, len(results))
-		for _, r := range results {
-			m[r.Name] = r.Hex
+		var b strings.Builder
+		b.WriteString("{\n")
+		for i, r := range results {
+			key, _ := json.Marshal(r.Name)
+			val, _ := json.Marshal(r.Hex)
+			fmt.Fprintf(&b, "  %s: %s", key, val)
+			if i < len(results)-1 {
+				b.WriteByte(',')
+			}
+			b.WriteByte('\n')
 		}
-		jsonData, err := json.MarshalIndent(m, "", "  ")
-		if err != nil {
-			util.PrintError("Error marshalling JSON: %v", err)
-			return
-		}
-		fmt.Println(string(jsonData))
+		b.WriteString("}")
+		fmt.Println(b.String())
 		return
 	}
 
