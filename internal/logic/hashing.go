@@ -14,6 +14,7 @@ import (
 	"hash"
 	"io"
 	"os"
+	"sync"
 )
 
 type HashAlgorithm struct {
@@ -34,8 +35,7 @@ type HashResult struct {
 	Hex  string
 }
 
-// HashFile opens path and returns the hex digest of every registered
-// algorithm, computed in a single read pass.
+// HashFile opens path and returns the hex digest of every registered algorithm.
 func HashFile(path string) ([]HashResult, error) {
 	f, err := os.Open(path)
 	if err != nil {
@@ -47,18 +47,52 @@ func HashFile(path string) ([]HashResult, error) {
 }
 
 // HashReader computes the hex digest of every registered algorithm for the
-// contents of r in a single read pass.
+// contents of r. Each algorithm runs in its own goroutine so large inputs
+// are hashed in parallel across CPU cores.
 func HashReader(r io.Reader) ([]HashResult, error) {
+	const chunkSize = 64 * 1024
+
 	hashers := make([]hash.Hash, len(HashAlgorithms))
-	writers := make([]io.Writer, len(HashAlgorithms))
+	chans := make([]chan []byte, len(HashAlgorithms))
+	var wg sync.WaitGroup
+
 	for i, a := range HashAlgorithms {
-		h := a.New()
-		hashers[i] = h
-		writers[i] = h
+		hashers[i] = a.New()
+		chans[i] = make(chan []byte, 8)
+		h, ch := hashers[i], chans[i]
+		wg.Go(func() {
+			for buf := range ch {
+				h.Write(buf)
+			}
+		})
 	}
 
-	if _, err := io.Copy(io.MultiWriter(writers...), r); err != nil {
-		return nil, fmt.Errorf("read: %w", err)
+	var readErr error
+	for {
+		buf := make([]byte, chunkSize)
+		n, err := r.Read(buf)
+		if n > 0 {
+			chunk := buf[:n]
+			for _, ch := range chans {
+				ch <- chunk
+			}
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			readErr = err
+			break
+		}
+	}
+
+	for _, ch := range chans {
+		close(ch)
+	}
+	wg.Wait()
+
+	if readErr != nil {
+		return nil, fmt.Errorf("read: %w", readErr)
 	}
 
 	results := make([]HashResult, len(HashAlgorithms))
