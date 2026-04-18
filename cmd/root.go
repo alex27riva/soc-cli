@@ -19,10 +19,10 @@ var cfgFile string
 func printSplash() {
 	fmt.Printf(`
   ┌─────────────────────────────────┐
-  │  (\_/)  S O C - C L I  /══[>   │
-  │  (o.O)════════════════/═══[>   │
-  │  (> <)  Swiss Army Knife for   │
-  │          SOC Analysts  v%s    │
+  │  (\_/)  S O C - C L I  /══[>    │
+  │  (o.O)════════════════/═══[>    │
+  │  (> <)  Swiss Army Knife for    │
+  │          SOC Analysts  %s   │
   └─────────────────────────────────┘
 `, Version)
 }
