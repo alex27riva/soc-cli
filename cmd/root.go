@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"os"
 	"soc-cli/internal/config"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 )
@@ -17,14 +19,34 @@ import (
 var cfgFile string
 
 func printSplash() {
-	fmt.Printf(`
-  ┌─────────────────────────────────┐
-  │  (\_/)  S O C - C L I  /══[>    │
-  │  (o.O)════════════════/═══[>    │
-  │  (> <)  Swiss Army Knife for    │
-  │          SOC Analysts  %s   │
-  └─────────────────────────────────┘
-`, Version)
+	lines := []string{
+		`(\_/)  S O C - C L I  /══[>`,
+		`(o.O)════════════════/═══[>`,
+		`(> <)  Swiss Army Knife for`,
+		`        SOC Analysts  ` + Version,
+	}
+	const pad = 2
+
+	width := 0
+	for _, l := range lines {
+		if w := utf8.RuneCountInString(l); w > width {
+			width = w
+		}
+	}
+	border := strings.Repeat("─", width+pad*2)
+
+	var b strings.Builder
+	b.WriteString("\n  ┌" + border + "┐\n")
+	for _, l := range lines {
+		right := width - utf8.RuneCountInString(l) + pad
+		fmt.Fprintf(&b, "  │%s%s%s│\n",
+			strings.Repeat(" ", pad),
+			l,
+			strings.Repeat(" ", right),
+		)
+	}
+	b.WriteString("  └" + border + "┘\n")
+	fmt.Print(b.String())
 }
 
 var rootCmd = &cobra.Command{
