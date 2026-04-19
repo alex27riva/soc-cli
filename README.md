@@ -7,6 +7,8 @@
 `soc-cli` is a command-line tool for SOC analysts to aid in IP analysis, IOC extraction, URL scanning, and more.
 Built with Go, it provides commands to simplify threat intelligence workflows.
 
+![Made with VHS](https://vhs.charm.sh/vhs-eA4X0f73rLjS1kQ9Tu4FT.gif)
+
 ## Features
 
 - **IP Analysis**: Lookup IP addresses for threat intelligence, geo-location, and ASN info via IPInfo, GreyNoise, and AbuseIPDB

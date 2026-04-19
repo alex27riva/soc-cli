@@ -1,0 +1,16 @@
+Incident Report - Suspicious Activity Detected
+================================================
+
+Source IPs observed in firewall logs:
+  192.168.1.100 initiated connection to 45.33.32.156
+  185.220.101.47 attempted brute-force on SSH port
+
+Phishing email received from attacker@evil-domain.com
+Redirected to hxxp://malware-download[.]xyz/payload.exe
+C2 callback to https://c2.badactor.net/check-in
+
+File hashes from suspicious attachments:
+  44d88612fea8a8f36de82e1278abb02f3f78a3a3c313d36b5f9b5e9d8d8a8d8a
+  e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+Related domains: updates.windows-patch.ru, cdn.trackerservice.io
