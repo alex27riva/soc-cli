@@ -7,7 +7,7 @@ See the LICENSE file for details.
 package main
 
 import (
-	"soc-cli/cmd"
+	"github.com/alex27riva/soc-cli/cmd"
 )
 
 func main() {

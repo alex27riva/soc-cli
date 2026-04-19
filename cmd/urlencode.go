@@ -10,9 +10,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"soc-cli/internal/logic"
-	"soc-cli/internal/util"
 	"strings"
+
+	"github.com/alex27riva/soc-cli/internal/logic"
+	"github.com/alex27riva/soc-cli/internal/util"
 
 	"github.com/spf13/cobra"
 )

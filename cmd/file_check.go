@@ -18,10 +18,10 @@ import (
 	"time"
 
 	vt "github.com/VirusTotal/vt-go"
+	"github.com/alex27riva/soc-cli/internal/util"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"soc-cli/internal/util"
 )
 
 const virusTotalFileGuiURL = "https://www.virustotal.com/gui/file/%s"

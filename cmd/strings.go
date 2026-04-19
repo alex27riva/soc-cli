@@ -11,8 +11,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"soc-cli/internal/util"
 	"unicode"
+
+	"github.com/alex27riva/soc-cli/internal/util"
 
 	"github.com/spf13/cobra"
 )

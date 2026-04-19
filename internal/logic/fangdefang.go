@@ -9,7 +9,7 @@ package logic
 import (
 	"strings"
 
-	"soc-cli/internal/util"
+	"github.com/alex27riva/soc-cli/internal/util"
 )
 
 func Defang(input string) string {

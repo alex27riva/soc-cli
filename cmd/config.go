@@ -11,11 +11,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/alex27riva/soc-cli/internal/util"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/term"
-	"soc-cli/internal/util"
 )
 
 var knownServices = []string{"urlscan", "ipinfo", "greynoise", "abuseipdb", "virustotal"}

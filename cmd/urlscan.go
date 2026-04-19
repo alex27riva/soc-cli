@@ -11,9 +11,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"soc-cli/internal/logic"
-	"soc-cli/internal/util"
 	"time"
+
+	"github.com/alex27riva/soc-cli/internal/logic"
+	"github.com/alex27riva/soc-cli/internal/util"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -142,7 +143,7 @@ var urlScanCmd = &cobra.Command{
 	Use:     "url-scan <url>",
 	Aliases: []string{"urlscan"},
 	Short:   "Submit a URL to urlscan.io and retrieve the scan results",
-	Args:  cobra.ExactArgs(1),
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		url := args[0]
 

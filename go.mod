@@ -1,4 +1,4 @@
-module soc-cli
+module github.com/alex27riva/soc-cli
 
 go 1.26.2
 

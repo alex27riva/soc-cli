@@ -9,8 +9,9 @@ package cmd
 import (
 	"fmt"
 	"net"
-	"soc-cli/internal/util"
 	"strings"
+
+	"github.com/alex27riva/soc-cli/internal/util"
 
 	"github.com/spf13/cobra"
 	"resty.dev/v3"

@@ -9,9 +9,10 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"soc-cli/internal/config"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/alex27riva/soc-cli/internal/config"
 
 	"github.com/spf13/cobra"
 )

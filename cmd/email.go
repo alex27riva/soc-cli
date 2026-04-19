@@ -8,16 +8,17 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/fatih/color"
-	"github.com/spf13/cobra"
 	"io"
 	"mime"
 	"mime/multipart"
 	"mime/quotedprintable"
 	"net/mail"
 	"os"
-	"soc-cli/internal/util"
 	"strings"
+
+	"github.com/alex27riva/soc-cli/internal/util"
+	"github.com/fatih/color"
+	"github.com/spf13/cobra"
 )
 
 const (

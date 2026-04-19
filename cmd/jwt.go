@@ -15,8 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alex27riva/soc-cli/internal/util"
 	"github.com/spf13/cobra"
-	"soc-cli/internal/util"
 )
 
 // RFC 7519 registered claims, printed first in this order.

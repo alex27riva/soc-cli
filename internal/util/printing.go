@@ -9,10 +9,11 @@ package util
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/color"
-	"golang.org/x/term"
 	"os"
 	"strings"
+
+	"github.com/fatih/color"
+	"golang.org/x/term"
 )
 
 func PrintHeader(format string, a ...interface{}) {

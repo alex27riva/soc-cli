@@ -8,9 +8,11 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/alex27riva/soc-cli/internal/util"
+
+	"github.com/alex27riva/soc-cli/internal/logic"
 	"github.com/spf13/cobra"
-	"soc-cli/internal/logic"
-	"soc-cli/internal/util"
 )
 
 var defangCmd = &cobra.Command{

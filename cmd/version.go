@@ -10,7 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"soc-cli/internal/util"
+
+	"github.com/alex27riva/soc-cli/internal/util"
 
 	"github.com/spf13/cobra"
 )

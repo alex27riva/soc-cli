@@ -8,16 +8,17 @@ package cmd
 
 import (
 	"fmt"
+	"net"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/alex27riva/soc-cli/internal/apis"
+	"github.com/alex27riva/soc-cli/internal/util"
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"net"
-	"os"
-	"soc-cli/internal/apis"
-	"soc-cli/internal/util"
-	"strings"
-	"time"
 )
 
 const (

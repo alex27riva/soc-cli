@@ -8,9 +8,10 @@ package cmd
 
 import (
 	"fmt"
+
+	"github.com/alex27riva/soc-cli/internal/logic"
+	"github.com/alex27riva/soc-cli/internal/util"
 	"github.com/spf13/cobra"
-	"soc-cli/internal/logic"
-	"soc-cli/internal/util"
 )
 
 var fangCmd = &cobra.Command{
