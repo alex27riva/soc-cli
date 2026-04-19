@@ -10,17 +10,24 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"soc-cli/internal/logic"
+	"soc-cli/internal/util"
 )
 
 var fangCmd = &cobra.Command{
 	Use:   "fang [input]",
 	Short: "Convert defanged URLs or email addresses back to their original form",
-	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		input := args[0]
-		result := logic.Fang(input)
-		fmt.Println(result)
-	},
+	Args:  cobra.MaximumNArgs(1),
+	Run:   executeFang,
+}
+
+func executeFang(cmd *cobra.Command, args []string) {
+	var input string
+	if len(args) > 0 {
+		input = args[0]
+	} else {
+		input = util.GetPromptedInput("Enter URL or email to fang: ")
+	}
+	fmt.Println(logic.Fang(input))
 }
 
 func init() {

@@ -9,8 +9,8 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"net/url"
 	"os"
+	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
 	"strings"
 
@@ -33,7 +33,7 @@ var urlEncodeCmd = &cobra.Command{
 			}
 			input = strings.TrimRight(string(data), "\n")
 		}
-		fmt.Println(url.PathEscape(input))
+		fmt.Println(logic.URLEncode(input))
 	},
 }
 
@@ -53,7 +53,7 @@ var urlDecodeCmd = &cobra.Command{
 			}
 			input = strings.TrimRight(string(data), "\n")
 		}
-		decoded, err := url.QueryUnescape(input)
+		decoded, err := logic.URLDecode(input)
 		if err != nil {
 			util.PrintError("Error decoding URL-encoded string: %v", err)
 			return

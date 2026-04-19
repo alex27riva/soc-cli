@@ -9,63 +9,52 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"soc-cli/internal/logic"
 	"soc-cli/internal/util"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
-type hashOutput struct {
-	MD5    string `json:"MD5"`
-	SHA1   string `json:"SHA1"`
-	SHA256 string `json:"SHA256"`
-}
-
-func openFile(filePath string) (*os.File, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-
-	return file, nil
-}
-
-func showHashes(filePath string, asJson bool) {
-	file, err := openFile(filePath)
-	if err != nil {
-		fmt.Printf("Error opening file %v", err)
-	}
-
-	defer file.Close()
-
-	md5Digest := logic.ComputeFileMd5(file)
-	sha1Digest := logic.ComputeFileSha1(file)
-	sha256Digest := logic.ComputeFileSha256(file)
-
-	if asJson {
-
-		hashData := hashOutput{
-			MD5:    md5Digest,
-			SHA1:   sha1Digest,
-			SHA256: sha256Digest}
-
-		// Marshal to JSON and print
-		jsonData, err := json.MarshalIndent(hashData, "", "  ")
-		if err != nil {
-			log.Fatalf("Error marshalling JSON: %v", err)
+func showHashes(filePath string, asJSON, showDeprecated bool) {
+	algos := logic.HashAlgorithms
+	if !showDeprecated {
+		filtered := make([]logic.HashAlgorithm, 0, len(algos))
+		for _, a := range algos {
+			if !a.Deprecated {
+				filtered = append(filtered, a)
+			}
 		}
-		fmt.Println(string(jsonData))
-
-	} else {
-
-		util.PrintEntry("MD5", md5Digest)
-		util.PrintEntry("SHA1", sha1Digest)
-		util.PrintEntry("SHA256", sha256Digest)
-
+		algos = filtered
 	}
 
+	results, err := logic.HashFileWith(filePath, algos)
+	if err != nil {
+		util.PrintError("%v", err)
+		return
+	}
+
+	if asJSON {
+		var b strings.Builder
+		b.WriteString("{\n")
+		for i, r := range results {
+			key, _ := json.Marshal(r.Name)
+			val, _ := json.Marshal(r.Hex)
+			fmt.Fprintf(&b, "  %s: %s", key, val)
+			if i < len(results)-1 {
+				b.WriteByte(',')
+			}
+			b.WriteByte('\n')
+		}
+		b.WriteString("}")
+		fmt.Println(b.String())
+		return
+	}
+
+	for _, r := range results {
+		util.PrintEntry(r.Name, r.Hex)
+	}
 }
 
 var hashCmd = &cobra.Command{
@@ -73,13 +62,18 @@ var hashCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Short: "Calculate file hashes",
 	Run: func(cmd *cobra.Command, args []string) {
-		filePath := args[0]
 		asJSON, _ := cmd.Flags().GetBool("json")
-		showHashes(filePath, asJSON)
+		// Flag overrides config; otherwise fall back to hash.show_deprecated.
+		showDeprecated := viper.GetBool("hash.show_deprecated")
+		if cmd.Flags().Changed("show-deprecated") {
+			showDeprecated, _ = cmd.Flags().GetBool("show-deprecated")
+		}
+		showHashes(args[0], asJSON, showDeprecated)
 	},
 }
 
 func init() {
 	hashCmd.Flags().Bool("json", false, "Output hashes in JSON format")
+	hashCmd.Flags().BoolP("show-deprecated", "d", false, "Also compute deprecated hashes (MD5, SHA1)")
 	rootCmd.AddCommand(hashCmd)
 }

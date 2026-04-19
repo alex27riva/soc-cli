@@ -18,7 +18,29 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitConfig() error {
+func setDefaults() {
+	viper.SetDefault("api_keys.urlscan.api_key", "")
+	viper.SetDefault("api_keys.ipinfo.api_key", "")
+	viper.SetDefault("api_keys.greynoise.api_key", "")
+	viper.SetDefault("api_keys.abuseipdb.api_key", "")
+	viper.SetDefault("api_keys.virustotal.api_key", "")
+
+	viper.SetDefault("hash.show_deprecated", false)
+}
+
+// InitConfig loads configuration. If configFile is non-empty it is read
+// as-is (erroring if missing). Otherwise the default location
+// ~/.config/soc-cli/config.yaml is used, and created on first run.
+func InitConfig(configFile string) error {
+	setDefaults()
+
+	if configFile != "" {
+		viper.SetConfigFile(configFile)
+		if err := viper.ReadInConfig(); err != nil {
+			return fmt.Errorf("error reading config file %s: %v", configFile, err)
+		}
+		return nil
+	}
 
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -27,7 +49,6 @@ func InitConfig() error {
 
 	configPath := filepath.Join(home, ".config", "soc-cli")
 
-	// Create the directory if it doesn't exist
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
 			return fmt.Errorf("could not create config directory: %v", err)
@@ -37,12 +58,6 @@ func InitConfig() error {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(configPath)
-
-	viper.SetDefault("api_keys.urlscan.api_key", "")
-	viper.SetDefault("api_keys.ipinfo.api_key", "")
-	viper.SetDefault("api_keys.greynoise.api_key", "")
-	viper.SetDefault("api_keys.abuseipdb.api_key", "")
-	viper.SetDefault("api_keys.virustotal.api_key", "")
 
 	if err := viper.SafeWriteConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileAlreadyExistsError); ok {
