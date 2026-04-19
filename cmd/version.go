@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"runtime/debug"
+	"time"
 
 	"github.com/alex27riva/soc-cli/internal/util"
 
@@ -60,6 +62,25 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
+	if Version == "dev" {
+		if info, ok := debug.ReadBuildInfo(); ok {
+			if info.Main.Version != "" {
+				Version = info.Main.Version
+			}
+			for _, s := range info.Settings {
+				switch s.Key {
+				case "vcs.revision":
+					Commit = s.Value
+				case "vcs.time":
+					if t, err := time.Parse(time.RFC3339, s.Value); err == nil {
+						Date = t.UTC().Format("20060102")
+					} else {
+						Date = s.Value
+					}
+				}
+			}
+		}
+	}
 	versionCmd.Flags().Bool("json", false, "Output version in JSON format")
 	rootCmd.AddCommand(versionCmd)
 }
