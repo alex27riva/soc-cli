@@ -9,6 +9,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	golang.org/x/term v0.35.0
+	lukechampine.com/blake3 v1.4.1
 	resty.dev/v3 v3.0.0-beta.3
 )
 
@@ -31,5 +32,4 @@ require (
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
-	lukechampine.com/blake3 v1.4.1 // indirect
 )

@@ -11,8 +11,13 @@ Set MarginFill "#282a36"
 Set Framerate 30
 Set PlaybackSpeed 1
 
-# Alias the binary
-Type "alias soc='./build/soc-cli_v0.5.0_linux_amd64'"
+# Install from Go
+Type "go install github.com/alex27riva/soc-cli@latest"
+Enter
+Sleep 2s
+
+# Set alias
+Type "alias soc='soc-cli'"
 Enter
 Sleep 300ms
 

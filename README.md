@@ -7,7 +7,7 @@
 `soc-cli` is a command-line tool for SOC analysts to aid in IP analysis, IOC extraction, URL scanning, and more.
 Built with Go, it provides commands to simplify threat intelligence workflows.
 
-![Made with VHS](https://vhs.charm.sh/vhs-eA4X0f73rLjS1kQ9Tu4FT.gif)
+![Made with VHS](https://vhs.charm.sh/vhs-6AzRS1H0zIfYq7vWe5lBjj.gif)
 
 ## Features
 
@@ -24,11 +24,17 @@ Built with Go, it provides commands to simplify threat intelligence workflows.
 
 ## Installation
 
+Requires Go 1.18+.
+
 ```bash
 go install github.com/alex27riva/soc-cli@latest
 ```
 
-Requires Go 1.18+. Binary lands in `$GOPATH/bin`.
+Add a short alias (add to `~/.bashrc` or `~/.zshrc` to persist):
+
+```bash
+alias soc='soc-cli'
+```
 
 **Or build from source:**
 
