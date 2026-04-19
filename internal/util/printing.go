@@ -69,7 +69,9 @@ func GetPromptedInput(prompt string) string {
 	return strings.TrimSpace(in)
 }
 
-// isInputFromPipe checks if the standard input is coming from a pipe
-func isInputFromPipe() bool {
+// IsInputFromPipe reports whether stdin is a pipe or redirected file.
+func IsInputFromPipe() bool {
 	return !term.IsTerminal(int(os.Stdin.Fd()))
 }
+
+func isInputFromPipe() bool { return IsInputFromPipe() }

@@ -8,9 +8,9 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"soc-cli/internal/logic"
-	"soc-cli/internal/util"
 )
 
 var fangCmd = &cobra.Command{
@@ -21,12 +21,7 @@ var fangCmd = &cobra.Command{
 }
 
 func executeFang(cmd *cobra.Command, args []string) {
-	var input string
-	if len(args) > 0 {
-		input = args[0]
-	} else {
-		input = util.GetPromptedInput("Enter URL or email to fang: ")
-	}
+	input := readIOCInput(args, "Enter URL or email to fang: ")
 	fmt.Println(logic.Fang(input))
 }
 

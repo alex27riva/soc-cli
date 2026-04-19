@@ -9,6 +9,7 @@ package cmd
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -17,6 +18,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"soc-cli/internal/util"
+)
+
+var (
+	errNoExpClaim       = errors.New("no 'exp' claim in JWT")
+	errInvalidExpFormat = errors.New("invalid 'exp' format")
+	errTokenExpired     = errors.New("token expired")
 )
 
 // RFC 7519 registered claims, printed first in this order.
@@ -32,7 +39,11 @@ var jwtDecodeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		checkExpired, _ := cmd.Flags().GetBool("expired")
 		asJSON, _ := cmd.Flags().GetBool("json")
-		return decodeJWT(args[0], checkExpired, asJSON)
+		err := decodeJWT(args[0], checkExpired, asJSON)
+		if errors.Is(err, errNoExpClaim) || errors.Is(err, errInvalidExpFormat) || errors.Is(err, errTokenExpired) {
+			os.Exit(1)
+		}
+		return err
 	},
 }
 
@@ -130,7 +141,7 @@ func checkJWTExpiration(payload map[string]any, asJSON bool) error {
 		if !asJSON {
 			util.PrintWarning("\nWarning: No 'exp' claim found in JWT.")
 		}
-		os.Exit(1)
+		return errNoExpClaim
 	}
 
 	expFloat, ok := exp.(float64)
@@ -138,7 +149,7 @@ func checkJWTExpiration(payload map[string]any, asJSON bool) error {
 		if !asJSON {
 			util.PrintWarning("\nWarning: Invalid 'exp' format: %v", exp)
 		}
-		os.Exit(1)
+		return errInvalidExpFormat
 	}
 
 	expTime := time.Unix(int64(expFloat), 0).Local()
@@ -146,7 +157,7 @@ func checkJWTExpiration(payload map[string]any, asJSON bool) error {
 		if !asJSON {
 			util.PrintError("\nToken expired at %s", expTime.Format(time.RFC3339))
 		}
-		os.Exit(1)
+		return errTokenExpired
 	}
 	if !asJSON {
 		util.PrintSuccess("\nToken is valid (expires at %s)", expTime.Format(time.RFC3339))

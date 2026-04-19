@@ -8,9 +8,9 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"soc-cli/internal/logic"
-	"soc-cli/internal/util"
 )
 
 var defangCmd = &cobra.Command{
@@ -21,14 +21,8 @@ var defangCmd = &cobra.Command{
 }
 
 func executeDefang(cmd *cobra.Command, args []string) {
-	var input string
-	if len(args) > 0 {
-		input = args[0]
-	} else {
-		input = util.GetPromptedInput("Enter URL or email to defang: ")
-	}
-	defanged := logic.Defang(input)
-	fmt.Println(defanged)
+	input := readIOCInput(args, "Enter URL or email to defang: ")
+	fmt.Println(logic.Defang(input))
 }
 
 func init() {

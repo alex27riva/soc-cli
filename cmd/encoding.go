@@ -8,9 +8,29 @@ package cmd
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"soc-cli/internal/util"
 )
+
+// readIOCInput returns the IOC string from: arg > piped stdin > interactive prompt.
+func readIOCInput(args []string, prompt string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	if util.IsInputFromPipe() {
+		data, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			util.PrintError("Error reading from stdin: %v", err)
+			return ""
+		}
+		return strings.TrimRight(string(data), "\n")
+	}
+	return util.GetPromptedInput(prompt)
+}
 
 // Show help when invoked with no args; error on unknown subcommand.
 func helpOrUnknown(cmd *cobra.Command, args []string) error {
