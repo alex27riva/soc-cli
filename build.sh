@@ -16,7 +16,7 @@ usage() {
     echo "  -p, --platform PLATFORM  Build only for this platform (e.g. linux/amd64)"
     echo "  -h, --help               Show this help message"
     echo ""
-    echo "Available platforms: windows/amd64, darwin/amd64, darwin/arm64, linux/amd64"
+    echo "Available platforms: windows/amd64, windows/arm64, darwin/amd64, darwin/arm64, linux/amd64"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -61,6 +61,7 @@ ldflags="-X 'soc-cli/cmd.Version=${version}' -X 'soc-cli/cmd.Commit=${short_sha}
 
 all_targets=(
     "windows amd64 .exe"
+    "windows arm64 .exe"
     "darwin amd64 "
     "darwin arm64 "
     "linux amd64 "
@@ -85,7 +86,7 @@ if [ -n "$platform" ]; then
 
     if [ ${#targets[@]} -eq 0 ]; then
         echo "Unknown platform: '${platform}'"
-        echo "Available platforms: windows/amd64, darwin/amd64, darwin/arm64, linux/amd64"
+echo "Available platforms: windows/amd64, darwin/amd64, darwin/arm64, linux/amd64, windows/arm64"
         exit 1
     fi
 
