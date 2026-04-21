@@ -22,8 +22,8 @@ import (
 	"resty.dev/v3"
 )
 
-var defautVisibility = "private" // public, unlisted or private
 var defangFlag bool
+var visibility string
 
 const (
 	urlscanScanApi   = "https://urlscan.io/api/v1/scan/"
@@ -47,16 +47,16 @@ type urlScanResult struct {
 }
 
 // submitURLScan submits a URL for scanning
-func submitURLScan(url string) (string, error) {
+func submitURLScan(url string, visibility string) (string, error) {
 	apiKey := viper.GetString("api_keys.urlscan.api_key")
 	if apiKey == "" {
 		return "", fmt.Errorf("API key is missing! Please set the urlscan api_key in config.yaml file")
 	}
 
 	headers := map[string]string{"API-Key": apiKey}
-	requestBody := map[string]string{"url": url, "visibility": defautVisibility}
+	requestBody := map[string]string{"url": url, "visibility": visibility}
 
-	var result map[string]interface{}
+	var result map[string]any
 
 	client := resty.New()
 	defer client.Close()
@@ -139,16 +139,24 @@ func displayResults(scanResult urlScanResult) {
 
 }
 
+var validVisibility = map[string]bool{"public": true, "unlisted": true, "private": true}
+
 var urlScanCmd = &cobra.Command{
-	Use:     "url-scan <url>",
+	Use:     "url-scan [url]",
 	Aliases: []string{"urlscan"},
 	Short:   "Submit a URL to urlscan.io and retrieve the scan results",
 	Args:    cobra.ExactArgs(1),
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if !validVisibility[visibility] {
+			return fmt.Errorf("invalid visibility: %s (must be public, unlisted, or private)", visibility)
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		url := args[0]
 
 		// Submit the URL for scanning
-		scanID, err := submitURLScan(url)
+		scanID, err := submitURLScan(url, visibility)
 		if err != nil {
 			log.Fatalf("Error submitting URL for scan: %v", err)
 		}
@@ -168,5 +176,6 @@ var urlScanCmd = &cobra.Command{
 
 func init() {
 	urlScanCmd.Flags().BoolVar(&defangFlag, "defang", false, "Defang the URL")
+	urlScanCmd.Flags().StringVar(&visibility, "visibility", "private", "Visibility of the scan (public, unlisted, or private)")
 	rootCmd.AddCommand(urlScanCmd)
 }
