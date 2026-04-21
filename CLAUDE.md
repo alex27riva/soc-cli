@@ -11,29 +11,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Build
 
 ```bash
-# Development build (outputs to build/soc, version tagged with git SHA)
-./dev-build.sh
-
-# Cross-platform release build (reads version from version.txt)
-./build.sh
-
-# Manual build
-go build -o soc-cli
+make dev      # Local build to build/soc (dev-{sha} version)
+make build   # Cross-platform release (via build.sh)
+go run main.go <command>  # Run without building
 ```
 
-### Run
+- Version comes from `version.txt` (e.g., `v0.6.0`)
+- Release builds to `build/soc-cli_*` for Windows/macOS/Linux
 
-```bash
-go run main.go <command>
-```
-
-### CI (GitHub Actions runs only this)
-
-```bash
-go build -v ./...
-```
-
-There are no tests or linting configured in this project.
+**No tests or linting configured.** CI runs only: `go build -v ./...`
 
 ## Architecture
 
@@ -50,7 +36,9 @@ The project follows a Cobra + Viper CLI pattern:
 
 User config lives at `~/.config/soc-cli/config.yaml` (Windows: `%USERPROFILE%/.config/soc-cli/config.yaml`). All five external API keys are stored there. The config is initialized automatically on first run.
 
-**Do not read or print the contents of `~/.config/soc-cli/config.yaml` (or any other file under `~/.config/soc-cli/`).** It holds live API keys for urlscan, ipinfo, greynoise, abuseipdb, and virustotal. Pulling its contents into the conversation leaks secrets into transcripts that may be cached or logged. If you need to know the config *schema*, read `internal/config/config.go` — it enumerates every key via `viper.SetDefault`.
+**Never read or print `~/.config/soc-cli/config.yaml`.** It contains live API keys (urlscan, ipinfo, greynoise, abuseipdb, virustotal). Leaking these into conversation transcripts compromises security.
+
+To see config schema, read `internal/config/config.go` instead.
 
 ### Adding a New Command
 

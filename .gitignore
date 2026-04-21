@@ -2,3 +2,4 @@ build/
 .idea/
 *.eml
 *.gif
+soc-cli
