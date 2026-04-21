@@ -8,12 +8,14 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/alex27riva/soc-cli/internal/apis"
+	"github.com/alex27riva/soc-cli/internal/logic"
 	"github.com/alex27riva/soc-cli/internal/util"
 	"github.com/fatih/color"
 	"github.com/rodaine/table"
@@ -33,8 +35,8 @@ var reportMaxLen int
 var reportEntries int
 
 func checkInput(input string) error {
-	// Handle defanged IP
-	input = strings.ReplaceAll(input, "[.]", ".")
+	// Handle defanged IP - use logic.Fang for consistent defang handling
+	input = logic.Fang(input)
 
 	ip := net.ParseIP(input)
 	if ip == nil {
@@ -58,6 +60,7 @@ func checkInput(input string) error {
 	return nil
 }
 
+// checkAPIKeys checks which API keys are missing
 func checkAPIKeys() []string {
 	var missingKeys []string
 	if viper.GetString("api_keys.greynoise.api_key") == "" {
@@ -72,6 +75,7 @@ func checkAPIKeys() []string {
 	return missingKeys
 }
 
+// analyzeIP queries multiple threat intelligence APIs for the given IP
 func analyzeIP(ip net.IP) {
 	missingKeys := checkAPIKeys()
 	if len(missingKeys) > 0 {
@@ -98,6 +102,7 @@ func analyzeIP(ip net.IP) {
 
 }
 
+// printIPInfo displays IPInfo data
 func printIPInfo(ipInfoData *apis.IPInfo) {
 	util.PrintHeader("IP information from IPInfo")
 	util.PrintEntry("IP", ipInfoData.IP)
@@ -107,6 +112,7 @@ func printIPInfo(ipInfoData *apis.IPInfo) {
 
 }
 
+// printGreyNoiseData displays GreyNoise threat intelligence data
 func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 	if greyNoiseData != nil {
 		util.PrintHeader("\nGreyNoise Threat Intelligence")
@@ -130,6 +136,7 @@ func printGreyNoiseData(greyNoiseData *apis.GreyNoiseInfo) {
 	}
 }
 
+// printAbuseIPDBData displays AbuseIPDB report data
 func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 	if abuseIPDBData != nil {
 		util.PrintHeader("\nAbuseIPDB report")
@@ -169,11 +176,25 @@ func printAbuseIPDBData(abuseIPDBData *apis.AbuseIPDBResponse) {
 }
 
 var ipCmd = &cobra.Command{
-	Use:   "ip <address>",
+	Use:   "ip [address]",
 	Short: "Analyze an IP address for geolocation, ASN, and threat status",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		input := args[0]
+		var input string
+		if len(args) == 1 {
+			input = args[0]
+		} else {
+			data, err := io.ReadAll(os.Stdin)
+			if err != nil {
+				util.PrintError("Error reading from stdin: %v", err)
+				os.Exit(1)
+			}
+			input = strings.TrimSpace(string(data))
+			if input == "" {
+				util.PrintError("No IP address provided")
+				os.Exit(1)
+			}
+		}
 		if err := checkInput(input); err != nil {
 			util.PrintError("Error: %v", err)
 			os.Exit(1)
