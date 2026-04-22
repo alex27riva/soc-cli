@@ -31,7 +31,7 @@ Requires GPG passphrase and GitHub CLI (`gh`).
 
 ## Architecture
 
-- `cmd/*.go` — 17 Cobra commands
+- `cmd/*.go` — 21 Cobra commands
 - `internal/apis/*.go` — External API calls (Resty HTTP client)
 - `internal/config/` — Viper config loader (creates `~/.config/soc-cli/config.yaml` on first run)
 - `internal/logic/` — Business logic (defang/fang, hashing)
@@ -42,13 +42,21 @@ Requires GPG passphrase and GitHub CLI (`gh`).
 | Command | Description |
 |---|---|
 | `ip <addr>` | Threat intel via IPInfo / GreyNoise / AbuseIPDB |
-| `extract-ioc <file>` | Extract IPs, URLs, hashes, emails |
+| `extract-ioc <file>` | Extract IOCs from file (URLs, IPs, emails, domains, hashes) |
 | `url-scan <url>` | Submit to urlscan.io |
 | `file-check <file>` | VirusTotal lookup/upload |
 | `email <file.eml>` | Parse .eml for attachments, links, SPF/DKIM/DMARC |
 | `hash <file>` | MD5/SHA1/SHA256/Blake3 |
 | `defang/fang` | Safe IOC format conversion |
 | `decode jwt` | JWT decode with `--expired` flag |
+| `myip` | Get public IP address |
+| `version` | Show version info |
+| `config [list\|set\|delete]` | Manage API keys configuration |
+| `encode/decode base64\|url` | Base64/URL encoding/decoding |
+| `rand base64\|hex <len>` | Generate random tokens |
+| `strings <file>` | Extract printable strings from binary |
+| `quota` | Check API quota usage |
+| `misc` | Container for miscellaneous commands |
 
 ## Setup
 
