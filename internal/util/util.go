@@ -8,6 +8,7 @@ package util
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -67,4 +68,22 @@ func formatDuration(d time.Duration) string {
 
 func IsValidDomain(domain string) bool {
 	return DomainRegex.MatchString(domain)
+}
+
+func FilterFileExtensions(domains []string) []string {
+	var valid []string
+	for _, d := range domains {
+		lower := strings.ToLower(d)
+		isExt := false
+		for _, ext := range FileExtTLDs {
+			if strings.HasSuffix(lower, ext) || strings.HasSuffix(lower, "."+ext) || strings.HasSuffix(lower, ext[1:]) {
+				isExt = true
+				break
+			}
+		}
+		if !isExt {
+			valid = append(valid, d)
+		}
+	}
+	return valid
 }

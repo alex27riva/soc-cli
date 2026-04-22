@@ -18,11 +18,12 @@ import (
 )
 
 type iocOutput struct {
-	URLs    []string `json:"urls"`
-	IPs     []string `json:"ips"`
-	Emails  []string `json:"emails"`
-	Domains []string `json:"domains"`
-	Hashes  []string `json:"hashes"`
+	URLs           []string `json:"urls"`
+	IPs            []string `json:"ips"`
+	Emails         []string `json:"emails"`
+	Domains        []string `json:"domains"`
+	Hashes         []string `json:"hashes"`
+	BitcoinAddrs   []string `json:"bitcoin_addresses"`
 }
 
 var extractIocCmd = &cobra.Command{
@@ -53,17 +54,19 @@ func extractIOCs(filePath string, asJSON bool) {
 	uniqueURLs := util.RemoveDuplicates(util.URLRegex.FindAllString(string(data), -1))
 	uniqueIPs := util.RemoveDuplicates(util.IPRegex.FindAllString(string(data), -1))
 	uniqueEmails := util.RemoveDuplicates(util.EmailRegex.FindAllString(string(data), -1))
-	uniqueDomains := util.RemoveDuplicates(util.DomainRegex.FindAllString(string(data), -1))
+	uniqueDomains := util.FilterFileExtensions(util.RemoveDuplicates(util.DomainRegex.FindAllString(string(data), -1)))
 	uniqueHashes := util.RemoveDuplicates(util.SHA256Regex.FindAllString(string(data), -1))
+	uniqueBitcoinAddrs := util.RemoveDuplicates(util.BitcoinRegex.FindAllString(string(data), -1))
 
 	if asJSON {
 		// Prepare data for JSON output
 		iocData := iocOutput{
-			URLs:    uniqueURLs,
-			IPs:     uniqueIPs,
-			Emails:  uniqueEmails,
-			Domains: uniqueDomains,
-			Hashes:  uniqueHashes,
+			URLs:         uniqueURLs,
+			IPs:          uniqueIPs,
+			Emails:       uniqueEmails,
+			Domains:      uniqueDomains,
+			Hashes:       uniqueHashes,
+			BitcoinAddrs: uniqueBitcoinAddrs,
 		}
 
 		// Marshal to JSON and print
@@ -74,7 +77,7 @@ func extractIOCs(filePath string, asJSON bool) {
 		fmt.Println(string(jsonData))
 	} else {
 
-		if len(uniqueIPs)+len(uniqueURLs)+len(uniqueEmails)+len(uniqueHashes) > 0 {
+		if len(uniqueIPs)+len(uniqueURLs)+len(uniqueEmails)+len(uniqueHashes)+len(uniqueBitcoinAddrs) > 0 {
 			util.PrintHeader("Extracted IOCs")
 		} else {
 			util.PrintError("No IOCs found")
@@ -117,6 +120,14 @@ func extractIOCs(filePath string, asJSON bool) {
 			util.PrintHeader("\nSHA256 Hashes:")
 			for _, hash := range uniqueHashes {
 				fmt.Println(hash)
+			}
+		}
+
+		// Print Bitcoin Addresses
+		if len(uniqueBitcoinAddrs) > 0 {
+			util.PrintHeader("\nBitcoin Addresses:")
+			for _, addr := range uniqueBitcoinAddrs {
+				fmt.Println(addr)
 			}
 		}
 	}
