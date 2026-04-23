@@ -17,13 +17,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type iocOutput struct {
-	URLs           []string `json:"urls"`
-	IPs            []string `json:"ips"`
-	Emails         []string `json:"emails"`
-	Domains        []string `json:"domains"`
-	Hashes         []string `json:"hashes"`
-	BitcoinAddrs   []string `json:"bitcoin_addresses"`
+type extractedIOCs struct {
+	URLs         []string
+	IPs          []string
+	Emails       []string
+	Domains      []string
+	Hashes       []string
+	BitcoinAddrs []string
+}
+
+func (e extractedIOCs) isEmpty() bool {
+	return len(e.URLs) == 0 && len(e.IPs) == 0 && len(e.Emails) == 0 &&
+		len(e.Domains) == 0 && len(e.Hashes) == 0 && len(e.BitcoinAddrs) == 0
 }
 
 var extractIocCmd = &cobra.Command{
@@ -32,103 +37,93 @@ var extractIocCmd = &cobra.Command{
 	Long:  `Extracts IOCs like URLs, IP addresses, email addresses, and file hashes from a specified text file.`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		filePath := args[0]
+		noDomains, _ := cmd.Flags().GetBool("no-domains")
 		asJSON, _ := cmd.Flags().GetBool("json")
-		extractIOCs(filePath, asJSON)
+
+		iocs := extractIOCs(args[0])
+		if noDomains {
+			iocs.Domains = nil
+		}
+
+		if asJSON {
+			printIOCsJSON(iocs)
+		} else {
+			printIOCsText(iocs)
+		}
 	},
 }
 
 func init() {
 	extractIocCmd.Flags().Bool("json", false, "Output IOCs in JSON format")
+	extractIocCmd.Flags().Bool("no-domains", false, "Do not extract domains")
 	rootCmd.AddCommand(extractIocCmd)
 }
 
-func extractIOCs(filePath string, asJSON bool) {
-
+func extractIOCs(filePath string) extractedIOCs {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Error reading file: %v", err)
 	}
 
-	// Find all IOCs
-	uniqueURLs := util.RemoveDuplicates(util.URLRegex.FindAllString(string(data), -1))
-	uniqueIPs := util.RemoveDuplicates(util.IPRegex.FindAllString(string(data), -1))
-	uniqueEmails := util.RemoveDuplicates(util.EmailRegex.FindAllString(string(data), -1))
-	uniqueDomains := util.FilterFileExtensions(util.RemoveDuplicates(util.DomainRegex.FindAllString(string(data), -1)))
-	uniqueHashes := util.RemoveDuplicates(util.SHA256Regex.FindAllString(string(data), -1))
-	uniqueBitcoinAddrs := util.RemoveDuplicates(util.BitcoinRegex.FindAllString(string(data), -1))
+	content := string(data)
 
-	if asJSON {
-		// Prepare data for JSON output
-		iocData := iocOutput{
-			URLs:         uniqueURLs,
-			IPs:          uniqueIPs,
-			Emails:       uniqueEmails,
-			Domains:      uniqueDomains,
-			Hashes:       uniqueHashes,
-			BitcoinAddrs: uniqueBitcoinAddrs,
-		}
+	return extractedIOCs{
+		IPs:          util.RemoveDuplicates(util.IPRegex.FindAllString(content, -1)),
+		URLs:         util.RemoveDuplicates(util.URLRegex.FindAllString(content, -1)),
+		Emails:       util.RemoveDuplicates(util.EmailRegex.FindAllString(content, -1)),
+		Domains:      util.FilterFileExtensions(util.RemoveDuplicates(util.DomainRegex.FindAllString(content, -1))),
+		Hashes:       util.RemoveDuplicates(util.SHA256Regex.FindAllString(content, -1)),
+		BitcoinAddrs: util.RemoveDuplicates(util.BitcoinRegex.FindAllString(content, -1)),
+	}
+}
 
-		// Marshal to JSON and print
-		jsonData, err := json.MarshalIndent(iocData, "", "  ")
-		if err != nil {
-			log.Fatalf("Error marshalling JSON: %v", err)
-		}
-		fmt.Println(string(jsonData))
-	} else {
+func printIOCsJSON(iocs extractedIOCs) {
+	output := struct {
+		URLs         []string `json:"urls,omitempty"`
+		IPs          []string `json:"ips,omitempty"`
+		Emails       []string `json:"emails,omitempty"`
+		Domains      []string `json:"domains,omitempty"`
+		Hashes       []string `json:"hashes,omitempty"`
+		BitcoinAddrs []string `json:"bitcoin_addresses,omitempty"`
+	}{
+		URLs:         iocs.URLs,
+		IPs:          iocs.IPs,
+		Emails:       iocs.Emails,
+		Domains:      iocs.Domains,
+		Hashes:       iocs.Hashes,
+		BitcoinAddrs: iocs.BitcoinAddrs,
+	}
 
-		if len(uniqueIPs)+len(uniqueURLs)+len(uniqueEmails)+len(uniqueHashes)+len(uniqueBitcoinAddrs) > 0 {
-			util.PrintHeader("Extracted IOCs")
-		} else {
-			util.PrintError("No IOCs found")
-		}
+	jsonData, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		log.Fatalf("Error marshalling JSON: %v", err)
+	}
+	fmt.Println(string(jsonData))
+}
 
-		// Print IPs
-		if len(uniqueIPs) > 0 {
-			util.PrintHeader("\nIP Addresses:")
-			for _, ip := range uniqueIPs {
-				fmt.Println(ip)
-			}
-		}
+func printIOCsText(iocs extractedIOCs) {
+	if iocs.isEmpty() {
+		util.PrintError("No IOCs found")
+		return
+	}
 
-		// Print URLs
-		if len(uniqueURLs) > 0 {
-			util.PrintHeader("\nURLs:")
-			for _, url := range uniqueURLs {
-				fmt.Println(url)
-			}
-		}
+	util.PrintHeader("Extracted IOCs")
 
-		// Print Emails
-		if len(uniqueEmails) > 0 {
-			util.PrintHeader("\nEmail Addresses:")
-			for _, email := range uniqueEmails {
-				fmt.Println(email)
-			}
-		}
+	printSection("IP Addresses:", iocs.IPs)
+	printSection("URLs:", iocs.URLs)
+	printSection("Email Addresses:", iocs.Emails)
+	printSection("Domains:", iocs.Domains)
+	printSection("SHA256 Hashes:", iocs.Hashes)
+	printSection("Bitcoin Addresses:", iocs.BitcoinAddrs)
+}
 
-		// Print Domains
-		if len(uniqueDomains) > 0 {
-			util.PrintHeader("\nDomains:")
-			for _, email := range uniqueDomains {
-				fmt.Println(email)
-			}
-		}
+func printSection(title string, items []string) {
+	if len(items) == 0 {
+		return
+	}
 
-		// Print SHA256 Hashes
-		if len(uniqueHashes) > 0 {
-			util.PrintHeader("\nSHA256 Hashes:")
-			for _, hash := range uniqueHashes {
-				fmt.Println(hash)
-			}
-		}
-
-		// Print Bitcoin Addresses
-		if len(uniqueBitcoinAddrs) > 0 {
-			util.PrintHeader("\nBitcoin Addresses:")
-			for _, addr := range uniqueBitcoinAddrs {
-				fmt.Println(addr)
-			}
-		}
+	util.PrintHeader("\n" + title)
+	for _, item := range items {
+		fmt.Println(item)
 	}
 }
