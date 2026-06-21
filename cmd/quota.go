@@ -67,7 +67,11 @@ func runQuota(cmd *cobra.Command, args []string) {
 }
 
 func printAbuseIPDBQuota(apiKey string) {
-	quota := apis.GetAbuseIPDBQuota(apiKey)
+	quota, err := apis.GetAbuseIPDBQuota(apiKey)
+	if err != nil {
+		util.PrintWarning("Error fetching AbuseIPDB quota: %v", err)
+		return
+	}
 
 	util.PrintHeader("AbuseIPDB API Quota")
 

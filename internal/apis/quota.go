@@ -8,7 +8,6 @@ package apis
 
 import (
 	"fmt"
-	"log"
 
 	vt "github.com/VirusTotal/vt-go"
 	"resty.dev/v3"
@@ -109,7 +108,7 @@ func GetUrlscanQuota(apiKey string) (*UrlscanQuotaResponse, error) {
 	return result, nil
 }
 
-func GetAbuseIPDBQuota(apiKey string) *AbuseIPDBQuotaResponse {
+func GetAbuseIPDBQuota(apiKey string) (*AbuseIPDBQuotaResponse, error) {
 	client := resty.New()
 	defer client.Close()
 
@@ -125,7 +124,7 @@ func GetAbuseIPDBQuota(apiKey string) *AbuseIPDBQuotaResponse {
 		SetQueryParam("ipAddress", "1.1.1.1").
 		Get("/check")
 	if err != nil {
-		log.Fatalf("Error fetching AbuseIPDB quota: %v", err)
+		return nil, fmt.Errorf("error fetching AbuseIPDB quota: %v", err)
 	}
 
 	result := &AbuseIPDBQuotaResponse{}
@@ -137,7 +136,7 @@ func GetAbuseIPDBQuota(apiKey string) *AbuseIPDBQuotaResponse {
 		fmt.Sscanf(remaining, "%d", &result.DailyRemaining)
 	}
 
-	return result
+	return result, nil
 }
 
 func GetVirusTotalQuota(apiKey string) (*VirusTotalQuota, error) {
