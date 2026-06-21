@@ -41,7 +41,7 @@ var randCmd = &cobra.Command{
 		length := 32
 		if len(args) > 0 {
 			var err error
-		length, err = strconv.Atoi(args[0])
+			length, err = strconv.Atoi(args[0])
 			if err != nil || length <= 0 {
 				return fmt.Errorf("invalid length: %s", args[0])
 			}
@@ -56,17 +56,17 @@ var randCmd = &cobra.Command{
 }
 
 var randBase64Cmd = &cobra.Command{
-	Use:   "base64 [length]",
+	Use:     "base64 [length]",
 	Aliases: []string{"b64"},
-	Args:  cobra.MaximumNArgs(1),
-	Short: "Generate base64 encoded random string",
+	Args:    cobra.MaximumNArgs(1),
+	Short:   "Generate base64 encoded random string",
 	Example: `  soc-cli rand base64 32
   soc-cli rand b64 16`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		length := 32
 		if len(args) > 0 {
 			var err error
-		length, err = strconv.Atoi(args[0])
+			length, err = strconv.Atoi(args[0])
 			if err != nil || length <= 0 {
 				return fmt.Errorf("invalid length: %s", args[0])
 			}
@@ -81,15 +81,15 @@ var randBase64Cmd = &cobra.Command{
 }
 
 var randHexCmd = &cobra.Command{
-	Use:   "hex [length]",
-	Args:  cobra.MaximumNArgs(1),
-	Short: "Generate hexadecimal encoded random string",
+	Use:     "hex [length]",
+	Args:    cobra.MaximumNArgs(1),
+	Short:   "Generate hexadecimal encoded random string",
 	Example: `  soc-cli rand hex 32`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		length := 32
 		if len(args) > 0 {
 			var err error
-		length, err = strconv.Atoi(args[0])
+			length, err = strconv.Atoi(args[0])
 			if err != nil || length <= 0 {
 				return fmt.Errorf("invalid length: %s", args[0])
 			}
