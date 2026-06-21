@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -uo pipefail
+
 program_name="soc-cli"
 
 date=$(date '+%Y%m%d')
@@ -7,6 +9,26 @@ short_sha=$(git rev-parse --short HEAD)
 
 version=""
 platform=""
+
+all_targets=(
+    "windows amd64 .exe"
+    "windows arm64 .exe"
+    "darwin amd64 "
+    "darwin arm64 "
+    "linux amd64 "
+)
+
+# platform_list prints the supported os/arch pairs derived from all_targets
+platform_list() {
+    local out=()
+    for t in "${all_targets[@]}"; do
+        read -r os arch _ <<< "$t"
+        out+=("${os}/${arch}")
+    done
+    local joined
+    printf -v joined '%s, ' "${out[@]}"
+    echo "${joined%, }"
+}
 
 usage() {
     echo "Usage: $0 [options]"
@@ -16,7 +38,7 @@ usage() {
     echo "  -p, --platform PLATFORM  Build only for this platform (e.g. linux/amd64)"
     echo "  -h, --help               Show this help message"
     echo ""
-    echo "Available platforms: windows/amd64, windows/arm64, darwin/amd64, darwin/arm64, linux/amd64"
+    echo "Available platforms: $(platform_list)"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -59,14 +81,6 @@ mkdir -p build
 
 ldflags="-X 'soc-cli/cmd.Version=${version}' -X 'soc-cli/cmd.Commit=${short_sha}' -X 'soc-cli/cmd.Date=${date}'"
 
-all_targets=(
-    "windows amd64 .exe"
-    "windows arm64 .exe"
-    "darwin amd64 "
-    "darwin arm64 "
-    "linux amd64 "
-)
-
 # Filter to a single target if --platform was given
 if [ -n "$platform" ]; then
     IFS='/' read -r filter_os filter_arch <<< "$platform"
@@ -86,7 +100,7 @@ if [ -n "$platform" ]; then
 
     if [ ${#targets[@]} -eq 0 ]; then
         echo "Unknown platform: '${platform}'"
-echo "Available platforms: windows/amd64, darwin/amd64, darwin/arm64, linux/amd64, windows/arm64"
+        echo "Available platforms: $(platform_list)"
         exit 1
     fi
 
@@ -95,7 +109,7 @@ echo "Available platforms: windows/amd64, darwin/amd64, darwin/arm64, linux/amd6
 else
     targets=("${all_targets[@]}")
     echo ":: Removing existing ${program_name}_* files..."
-    rm -f build/${program_name}_*
+    rm -f "build/${program_name}_"*
 fi
 
 fail_count=0
@@ -105,13 +119,12 @@ for t in "${targets[@]}"; do
     parts=($t)
     GOOS=${parts[0]}
     GOARCH=${parts[1]}
-    ext=${parts[2]}
+    ext=${parts[2]:-}
 
     out_name="${program_name}_${version}_${GOOS}_${GOARCH}${ext}"
     echo ":: Building for ${GOOS}/${GOARCH} -> ${out_name}"
 
-    GOOS=${GOOS} GOARCH=${GOARCH} go build -ldflags "${ldflags}" -o "build/${out_name}"
-    if [ $? -ne 0 ]; then
+    if ! GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go build -trimpath -ldflags "${ldflags}" -o "build/${out_name}"; then
         echo "Failed to build for ${GOOS}/${GOARCH}."
         fail_count=$((fail_count+1))
     fi
@@ -121,5 +134,8 @@ if [ ${fail_count} -ne 0 ]; then
     echo "Build finished with ${fail_count} failure(s)."
     exit 1
 fi
+
+echo ":: Generating checksums..."
+( cd build && sha256sum "${program_name}_${version}"_* > checksums.txt )
 
 echo "Build completed successfully!"
