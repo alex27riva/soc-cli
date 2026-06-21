@@ -7,10 +7,10 @@ See the LICENSE file for details.
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/alex27riva/soc-cli/internal/logic"
@@ -24,6 +24,7 @@ import (
 
 var defangFlag bool
 var visibility string
+var urlscanDebug bool
 
 const (
 	urlscanScanApi   = "https://urlscan.io/api/v1/scan/"
@@ -61,7 +62,9 @@ func submitURLScan(url string, visibility string) (string, error) {
 	client := resty.New()
 	defer client.Close()
 
-	_, err := client.R().
+	slog.Debug("submitting scan", "url", url, "visibility", visibility, "apiKeyLen", len(apiKey))
+
+	resp, err := client.R().
 		SetHeaders(headers).
 		SetBody(requestBody).
 		SetResult(&result).
@@ -69,6 +72,14 @@ func submitURLScan(url string, visibility string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to submit URL scan request: %v", err)
 	}
+
+	slog.Debug("submit response", "status", resp.StatusCode(), "body", resp.String())
+
+	if resp.StatusCode() != http.StatusOK {
+		body := resp.String()
+		return "", fmt.Errorf("submit failed with status %d: %s", resp.StatusCode(), body)
+	}
+
 	// Extract the scan ID to check for the scan status
 	scanID, ok := result["uuid"].(string)
 	if !ok {
@@ -80,30 +91,34 @@ func submitURLScan(url string, visibility string) (string, error) {
 
 // fetchURLScanResult fetches the results of a URL scan
 func fetchURLScanResult(scanID string) (*urlScanResult, error) {
+	apiKey := viper.GetString("api_keys.urlscan.api_key")
 	apiUrl := fmt.Sprintf(urlscanResultApi, scanID)
 
-	// Polling for scan results
-	for i := 0; i < 10; i++ {
-		resp, err := http.Get(apiUrl)
+	client := resty.New()
+	defer client.Close()
+
+	slog.Debug("polling results", "url", apiUrl)
+
+	for i := range 10 {
+		var scanResult urlScanResult
+
+		resp, err := client.R().
+			SetHeader("API-Key", apiKey).
+			SetResult(&scanResult).
+			Get(apiUrl)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get scan results: %v", err)
 		}
-		defer resp.Body.Close()
 
-		if resp.StatusCode == http.StatusNotFound {
-			// Scan still in progress, wait and retry
+		slog.Debug("poll attempt", "attempt", i+1, "status", resp.StatusCode())
+
+		if resp.StatusCode() == http.StatusNotFound {
 			time.Sleep(5 * time.Second)
 			continue
 		}
 
-		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-		}
-
-		// Parse the response body
-		var scanResult urlScanResult
-		if err := json.NewDecoder(resp.Body).Decode(&scanResult); err != nil {
-			return nil, fmt.Errorf("failed to parse scan result: %v", err)
+		if resp.StatusCode() != http.StatusOK {
+			return nil, fmt.Errorf("unexpected status %d: %s", resp.StatusCode(), resp.String())
 		}
 
 		return &scanResult, nil
@@ -153,29 +168,33 @@ var urlScanCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		if urlscanDebug {
+			slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelDebug})))
+		}
+
 		url := args[0]
 
-		// Submit the URL for scanning
 		scanID, err := submitURLScan(url, visibility)
 		if err != nil {
-			log.Fatalf("Error submitting URL for scan: %v", err)
+			slog.Error("submitting URL for scan", "error", err)
+			os.Exit(1)
 		}
 
 		util.PrintSuccess("URL submitted successfully.")
 		util.PrintHeader("Awaiting results...")
 
-		// Fetch the scan results
 		scanResult, err := fetchURLScanResult(scanID)
 		if err != nil {
-			log.Fatalf("Error retrieving scan results: %v", err)
+			slog.Error("retrieving scan results", "error", err)
+			os.Exit(1)
 		}
 		displayResults(*scanResult)
-
 	},
 }
 
 func init() {
 	urlScanCmd.Flags().BoolVar(&defangFlag, "defang", false, "Defang the URL")
 	urlScanCmd.Flags().StringVar(&visibility, "visibility", "private", "Visibility of the scan (public, unlisted, or private)")
+	urlScanCmd.Flags().BoolVar(&urlscanDebug, "debug", false, "Enable debug logging for requests and responses")
 	rootCmd.AddCommand(urlScanCmd)
 }
