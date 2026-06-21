@@ -76,7 +76,7 @@ func FilterFileExtensions(domains []string) []string {
 		lower := strings.ToLower(d)
 		isExt := false
 		for _, ext := range FileExtTLDs {
-			if strings.HasSuffix(lower, ext) || strings.HasSuffix(lower, "."+ext) || strings.HasSuffix(lower, ext[1:]) {
+			if strings.HasSuffix(lower, ext) {
 				isExt = true
 				break
 			}

@@ -122,6 +122,7 @@ func GetAbuseIPDBQuota(apiKey string) *AbuseIPDBQuotaResponse {
 
 	resp, err := client.R().
 		SetHeaders(headers).
+		SetQueryParam("ipAddress", "1.1.1.1").
 		Get("/check")
 	if err != nil {
 		log.Fatalf("Error fetching AbuseIPDB quota: %v", err)
@@ -157,31 +158,8 @@ func GetVirusTotalQuota(apiKey string) (*VirusTotalQuota, error) {
 }
 
 func parseQuota(obj *vt.Object, key string, info *QuotaInfo) {
-	getInt := func(path string) int {
-		val, _ := obj.Get(path)
-		if m, ok := val.(map[string]interface{}); ok {
-			if v, ok := m["allowed"].(float64); ok {
-				return int(v)
-			}
-		}
-		if v, ok := val.(float64); ok {
-			return int(v)
-		}
-		return 0
-	}
-
-	getUsed := func(path string) int {
-		val, _ := obj.Get(path)
-		if m, ok := val.(map[string]interface{}); ok {
-			if v, ok := m["used"].(float64); ok {
-				return int(v)
-			}
-		}
-		return 0
-	}
-
 	userVal, _ := obj.Get(key + ".user")
-	if m, ok := userVal.(map[string]interface{}); ok {
+	if m, ok := userVal.(map[string]any); ok {
 		if v, ok := m["allowed"].(float64); ok {
 			info.User.Allowed = int(v)
 		}
@@ -191,7 +169,7 @@ func parseQuota(obj *vt.Object, key string, info *QuotaInfo) {
 	}
 
 	groupVal, _ := obj.Get(key + ".group")
-	if m, ok := groupVal.(map[string]interface{}); ok {
+	if m, ok := groupVal.(map[string]any); ok {
 		if v, ok := m["allowed"].(float64); ok {
 			info.Group.Allowed = int(v)
 		}
@@ -199,7 +177,4 @@ func parseQuota(obj *vt.Object, key string, info *QuotaInfo) {
 			info.Group.Used = int(v)
 		}
 	}
-
-	_ = getInt
-	_ = getUsed
 }
