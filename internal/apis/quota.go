@@ -20,8 +20,8 @@ type VirusTotalQuota struct {
 }
 
 type QuotaInfo struct {
-	User   QuotaValues
-	Group  QuotaValues
+	User  QuotaValues
+	Group QuotaValues
 }
 
 type QuotaValues struct {
@@ -92,7 +92,7 @@ func GetUrlscanQuota(apiKey string) (*UrlscanQuotaResponse, error) {
 
 	headers := map[string]string{
 		"Content-Type": "application/json",
-		"API-Key":    apiKey,
+		"API-Key":      apiKey,
 	}
 
 	result := &UrlscanQuotaResponse{}
