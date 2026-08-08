@@ -10,18 +10,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"runtime/debug"
-	"time"
 
 	"github.com/alex27riva/soc-cli/internal/util"
+	"github.com/alex27riva/soc-cli/internal/version"
 
 	"github.com/spf13/cobra"
-)
-
-var (
-	Version = "dev"
-	Commit  = "none"
-	Date    = "unknown"
 )
 
 type VersionInfo struct {
@@ -33,9 +26,9 @@ type VersionInfo struct {
 func displayVersion(asJSON bool) {
 	if asJSON {
 		versionInfo := VersionInfo{
-			Version: Version,
-			Commit:  Commit,
-			Date:    Date,
+			Version: version.Version,
+			Commit:  version.GitCommit,
+			Date:    version.BuildDate,
 		}
 		jsonData, err := json.MarshalIndent(versionInfo, "", "  ")
 		if err != nil {
@@ -44,9 +37,9 @@ func displayVersion(asJSON bool) {
 		fmt.Println(string(jsonData))
 
 	} else {
-		util.PrintEntry("Version", Version)
-		util.PrintEntry("Commit", Commit)
-		util.PrintEntry("Date", Date)
+		util.PrintEntry("Version", version.Version)
+		util.PrintEntry("Commit", version.GitCommit)
+		util.PrintEntry("Date", version.BuildDate)
 	}
 
 }
@@ -62,25 +55,6 @@ var versionCmd = &cobra.Command{
 }
 
 func init() {
-	if Version == "dev" {
-		if info, ok := debug.ReadBuildInfo(); ok {
-			if info.Main.Version != "" {
-				Version = info.Main.Version
-			}
-			for _, s := range info.Settings {
-				switch s.Key {
-				case "vcs.revision":
-					Commit = s.Value
-				case "vcs.time":
-					if t, err := time.Parse(time.RFC3339, s.Value); err == nil {
-						Date = t.UTC().Format("20060102")
-					} else {
-						Date = s.Value
-					}
-				}
-			}
-		}
-	}
 	versionCmd.Flags().Bool("json", false, "Output version in JSON format")
 	rootCmd.AddCommand(versionCmd)
 }

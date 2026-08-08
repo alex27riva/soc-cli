@@ -11,13 +11,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Build
 
 ```bash
-make dev      # Local build to build/soc (dev-{sha} version)
-make build   # Cross-platform release (via build.sh)
-go run main.go <command>  # Run without building
+make build    # Local build to bin/soc-cli (version via `git describe`)
+make run      # go run ./cmd/soc-cli (ARGS="...")
+make test     # go test with race detector
+make lint     # golangci-lint
+make tidy     # go mod tidy && verify
+make ci       # tidy + lint + test
+make dist     # Cross-compile for all PLATFORMS into dist/
+make release  # dist + archive (tar.gz/zip) + SHA256SUMS in dist/
+make clean    # remove bin/, dist/, coverage.out
+go run ./cmd/soc-cli <command>  # Run without building
 ```
 
-- Version comes from `version.txt` (e.g., `v0.6.0`)
-- Release builds to `build/soc-cli_*` for Windows/macOS/Linux
+- Version/commit/date are injected via ldflags into `internal/version` at build time; when installed via `go install` without ldflags, `internal/version`'s `init()` falls back to `runtime/debug.ReadBuildInfo()`.
+- `make release` produces archives + `SHA256SUMS` in `dist/` for Windows/macOS/Linux (amd64/arm64). `release.sh vX.Y.Z` wraps this with GPG-signed checksums and a GitHub release.
+- Build tooling comes from a shared `common.mk` (fetched from `go-mk`); the project `Makefile` only sets `PLATFORMS` before including it.
 
 **No tests or linting configured.** CI runs only: `go build -v ./...`
 
@@ -25,12 +33,13 @@ go run main.go <command>  # Run without building
 
 The project follows a Cobra + Viper CLI pattern:
 
-- **`main.go`** — calls `config.InitConfig()` then `cmd.Execute()`
+- **`cmd/soc-cli/main.go`** — calls `cmd.Execute()`. Config init (`config.InitConfig()`) happens in `cmd/root.go`'s `PersistentPreRunE`, not in `main.go`.
 - **`cmd/`** — one file per command (17 commands total). Each file registers a Cobra command with flags and calls into `internal/` for logic.
 - **`internal/apis/`** — one file per external API integration (IPInfo, GreyNoise, AbuseIPDB, VirusTotal, URLScan). Each makes HTTP calls via [Resty](https://github.com/go-resty/resty) and returns structured results.
 - **`internal/config/`** — Viper-based config loader. On first run, creates `~/.config/soc-cli/config.yaml` with empty API key stubs and exits.
 - **`internal/logic/`** — pure business logic (defang/fang URLs and emails, file hashing).
 - **`internal/util/`** — shared helpers: IOC regex patterns (`regex.go`), colored table printing (`printing.go`), and misc utilities (`util.go`).
+- **`internal/version/`** — version/commit/date vars, ldflags-injected at build time with a `go install` fallback via `runtime/debug.ReadBuildInfo()`.
 
 ### Configuration
 

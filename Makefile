@@ -1,27 +1,6 @@
-BINARY   := soc-cli
-BUILD_DIR := build
-VERSION  := $(shell cat version.txt 2>/dev/null | tr -d '[:space:]')
-COMMIT   := $(shell git rev-parse --short HEAD)
-DATE     := $(shell date '+%Y%m%d')
-LDFLAGS  := -X 'soc-cli/cmd.Version=$(VERSION)' -X 'soc-cli/cmd.Commit=$(COMMIT)' -X 'soc-cli/cmd.Date=$(DATE)'
+PLATFORMS = windows/amd64 windows/arm64 darwin/amd64 darwin/arm64 linux/amd64 linux/arm64
 
-.PHONY: all build dev clean help
+common.mk:
+	@curl -fsSL https://raw.githubusercontent.com/alex27riva/go-mk/main/common.mk -o $@
 
-all: build
-
-## build: cross-platform release build via build.sh
-build:
-	./build.sh
-
-## dev: quick local build -> build/soc
-dev:
-	@mkdir -p $(BUILD_DIR)
-	go build -ldflags "-X 'soc-cli/cmd.Version=dev-$(COMMIT)' -X 'soc-cli/cmd.Commit=$(COMMIT)' -X 'soc-cli/cmd.Date=$(DATE)'" -o $(BUILD_DIR)/soc .
-
-## clean: remove build artifacts
-clean:
-	rm -rf $(BUILD_DIR)
-
-## help: list available targets
-help:
-	@grep -E '^## ' Makefile | sed 's/^## /  /'
+include common.mk
