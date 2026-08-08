@@ -40,8 +40,11 @@ alias soc='soc-cli'
 
 ```bash
 git clone https://github.com/alex27riva/soc-cli.git
-cd soc-cli && go build -o soc-cli
+cd soc-cli
+make build          # builds bin/soc-cli, version stamped via ldflags
 ```
+
+Or a plain build without the Makefile: `go build -o soc-cli ./cmd/soc-cli`
 
 ## Configuration
 

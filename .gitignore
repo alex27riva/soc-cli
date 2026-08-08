@@ -1,4 +1,6 @@
-build/
+bin/
+dist/
 .idea/
 *.eml
 *.gif
+soc-cli

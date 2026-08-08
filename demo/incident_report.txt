@@ -1,0 +1,214 @@
+================================================================================
+                        INCIDENT RESPONSE REPORT
+================================================================================
+Report ID     : IR-2026-0421
+Date          : 2026-04-21
+Severity      : CRITICAL
+Status        : Contained
+Analyst       : SOC Team -- Blue Team Operations
+TLP           : AMBER
+================================================================================
+
+
+1. EXECUTIVE SUMMARY
+--------------------------------------------------------------------------------
+On 2026-04-19 at approximately 02:14 UTC, automated alerting detected anomalous
+outbound traffic originating from a workstation in the Finance department
+(FINWS-047). Investigation revealed a multi-stage compromise involving an initial
+phishing email, a PowerShell-based loader, and deployment of a remote access
+trojan (RAT). The attacker exfiltrated financial documents and subsequently
+attempted to extort the organization via a ransom note demanding Bitcoin payment.
+The affected host has been isolated and remediation is ongoing.
+
+
+2. INCIDENT TIMELINE
+--------------------------------------------------------------------------------
+2026-04-18 17:43 UTC  Phishing email delivered to finance@company.com
+2026-04-18 17:51 UTC  User opened attachment: invoice_April2026.pdf.exe
+2026-04-18 17:52 UTC  loader.ps1 dropped and executed via macro
+2026-04-18 17:53 UTC  Outbound C2 beacon observed to 194.165.16.77
+2026-04-19 00:11 UTC  Lateral movement attempt to FILESERVER-02
+2026-04-19 01:58 UTC  Staged exfiltration of ~4.2 GB via DNS tunneling
+2026-04-19 02:14 UTC  SIEM alert triggered on anomalous DNS query volume
+2026-04-19 02:31 UTC  SOC analyst began triage
+2026-04-19 03:05 UTC  Host FINWS-047 isolated from network
+2026-04-19 03:22 UTC  Ransom note discovered on shared drive
+2026-04-19 09:00 UTC  Forensic image acquired
+2026-04-21 00:00 UTC  Report finalized
+
+
+3. AFFECTED SYSTEMS
+--------------------------------------------------------------------------------
+Hostname        : FINWS-047
+OS              : Windows 11 Pro 23H2
+IP (internal)   : 10.10.4.47
+MAC Address     : 00:1A:2B:3C:4D:5E
+User Account    : m.rossi (Finance Dept.)
+Domain          : corp.company.local
+
+Secondary (lateral movement attempted, not confirmed compromised):
+Hostname        : FILESERVER-02
+IP (internal)   : 10.10.1.10
+
+
+4. ATTACK CHAIN SUMMARY
+--------------------------------------------------------------------------------
+[1] Initial Access   : Phishing email with double-extension attachment (.pdf.exe)
+[2] Execution        : Macro triggered PowerShell loader (AMSI bypass)
+[3] Persistence      : Registry run key added for RAT autostart
+[4] C2               : HTTPS beacon to attacker-controlled server
+[5] Discovery        : Net/LDAP enumeration via svchost32.exe
+[6] Lateral Movement : SMB connection attempt to FILESERVER-02 (blocked)
+[7] Exfiltration     : DNS tunneling of base64-encoded archive chunks
+[8] Impact           : Ransom demand + partial encryption of mapped drives
+
+
+5. INDICATORS OF COMPROMISE (IOCs)
+--------------------------------------------------------------------------------
+
+  5.1 EMAIL
+  ----------
+  Sender          : no-reply@phishing-login.net
+  Reply-To        : updates@malicious-update.ru
+  Subject         : Fattura #INV-2026-0418 - Pagamento richiesto
+  X-Originating-IP: 91.92.109.174
+  Message-ID      : <7f3a2b1c@phishing-login.net>
+
+  5.2 FILE HASHES
+  ----------------
+  Filename        : invoice_April2026.pdf.exe
+  MD5             : 9a8f3b2c1e7d4a6059f8b3c2d1e4f5a6
+  SHA1            : 1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b
+  SHA256          : 2c624232cdd221771294dfbb310acbc8f4197e4b337eb80b070a8e7d2a24b3f1
+  Type            : PE32 executable, macro dropper, double-extension
+  Tags            : phishing-attachment, macro-enabled, double-extension
+
+  Filename        : loader.ps1
+  MD5             : c4ca4238a0b923820dcc509a6f75849b
+  SHA1            : 356a192b7913b04c54574d18c28d46e6395428ab
+  SHA256          : 6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b
+  Type            : PowerShell script
+  Tags            : fileless-loader, AMSI-bypass, reflective-injection
+
+  Filename        : svchost32.exe  (lolbin impersonation)
+  MD5             : b14a7b8059d9c055954c92674ce60032
+  SHA1            : 89dce6a446a69d6b9bdc01ac75251e4c322bcddf
+  SHA256          : 5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5
+  Type            : PE32 executable (RAT)
+  Tags            : rat, persistence, process-impersonation
+
+  Filename        : update_client.dll
+  MD5             : eccbc87e4b5ce2fe28308fd9f2a7baf3
+  SHA1            : 77de68daecd823babbb58edb1c8e14d7106e83bb
+  SHA256          : d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35
+  Type            : DLL (sideloaded)
+  Tags            : dll-sideloading, c2-beacon
+
+  5.3 IP ADDRESSES
+  -----------------
+  194.165.16.77    C2 server (ransomware operator infrastructure)
+  91.92.109.174    Phishing host (bulletproof hosting)
+  45.142.212.100   Scanning / brute-force origin
+  185.220.101.45   Tor exit node, secondary C2 rotation
+  103.146.79.10    Spam relay / botnet node
+
+  5.4 DOMAINS
+  ------------
+  phishing-login.net          Phishing campaign domain
+  malicious-update.ru         Malware distribution / dropper delivery
+  c2-panel.xyz                Botnet C2 panel
+  update-checker.cc           RAT C2, disguised as update service
+  secure-verify-account.info  Brand impersonation, credential harvesting
+
+  5.5 URLS
+  ---------
+  https://c2-panel.xyz/gate.php
+  https://update-checker.cc/api/v2/check
+  http://malicious-update.ru/payload.exe
+  http://phishing-login.net/microsoft/verify
+  http://185.220.101.45/shell.php
+
+  5.6 REGISTRY KEYS (Persistence)
+  ---------------------------------
+  HKCU\Software\Microsoft\Windows\CurrentVersion\Run\WindowsUpdateSvc
+    -> C:\Users\m.rossi\AppData\Roaming\svchost32.exe
+
+  HKLM\SYSTEM\CurrentControlSet\Services\WinUpdateHelper
+    -> ImagePath: C:\Windows\Temp\update_client.dll
+
+  5.7 MUTEX
+  ----------
+  Global\_{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
+
+  5.8 BITCOIN ADDRESSES (Ransom Demand)
+  ---------------------------------------
+  The ransom note demanded 0.85 BTC. The following addresses were found
+  in the ransom note and captured network traffic:
+
+  Primary  (P2PKH)  : 1BoatSLRHtKNngkdXEeobR76b53LETtpyT
+  Payment  (P2SH)   : 3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy
+  Change   (Bech32) : bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq
+  Observed (Bech32) : bc1q9h6zctxhm9k0drqne8m6y7fxqzh4ux3llmgqz4
+
+  Note: None of the above addresses have received payment.
+
+
+6. HOST ARTIFACTS
+--------------------------------------------------------------------------------
+  Dropped path    : C:\Users\m.rossi\AppData\Roaming\svchost32.exe
+  Dropped path    : C:\Windows\Temp\loader.ps1
+  Dropped path    : C:\Windows\Temp\update_client.dll
+  Ransom note     : \\FILESERVER-02\Finance\!!!READ_ME!!!.txt
+  Scheduled task  : \Microsoft\Windows\WindowsUpdate\UpdateHelper
+  Named pipe      : \\.\pipe\msagent_4f2a1b3c
+
+
+7. NETWORK INDICATORS
+--------------------------------------------------------------------------------
+  User-Agent      : Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)
+  DNS exfil pattern: <base64chunk>.update-checker.cc (TXT queries, ~1200/hour)
+  JA3 fingerprint : 769,47-53-5-10-49161-49162-49171-49172-50-56-19-4,0-10-11,23-24,0
+  Beacon interval : ~300 seconds (+/- 30s jitter)
+  C2 protocol     : HTTPS POST to /gate.php, encrypted payload
+
+
+8. MITRE ATT&CK MAPPING
+--------------------------------------------------------------------------------
+  T1566.001   Phishing: Spearphishing Attachment
+  T1059.001   Command and Scripting Interpreter: PowerShell
+  T1547.001   Boot or Logon Autostart: Registry Run Keys
+  T1055       Process Injection
+  T1041       Exfiltration Over C2 Channel
+  T1071.004   Application Layer Protocol: DNS
+  T1486       Data Encrypted for Impact
+  T1490       Inhibit System Recovery
+
+
+9. CONTAINMENT & REMEDIATION
+--------------------------------------------------------------------------------
+  [DONE]  Host FINWS-047 isolated from network
+  [DONE]  User credentials reset (m.rossi + shared Finance accounts)
+  [DONE]  Malicious registry keys removed
+  [DONE]  IOCs pushed to firewall blocklist and SIEM correlation rules
+  [TODO]  Full reimaging of FINWS-047
+  [TODO]  Audit of FILESERVER-02 access logs
+  [TODO]  Enterprise-wide sweep for svchost32.exe and matching hashes
+  [TODO]  Phishing awareness training for Finance department
+  [TODO]  Review macro execution policy (GPO)
+
+
+10. RECOMMENDATIONS
+--------------------------------------------------------------------------------
+  1. Disable Office macros by default via GPO; allow only signed macros.
+  2. Enable PowerShell Constrained Language Mode and Script Block Logging.
+  3. Deploy application allowlisting on Finance workstations.
+  4. Implement DNS-layer filtering (e.g. RPZ) to block known C2 domains.
+  5. Monitor for double-extension file execution at the EDR level.
+  6. Add Bitcoin address pattern detection to DLP rules.
+  7. Enforce DMARC/DKIM/SPF on all inbound mail to reduce spoofed senders.
+
+
+================================================================================
+END OF REPORT — IR-2026-0421
+Classification: TLP:AMBER — Share with trusted partners only
+================================================================================

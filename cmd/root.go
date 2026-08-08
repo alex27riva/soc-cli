@@ -13,6 +13,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/alex27riva/soc-cli/internal/config"
+	"github.com/alex27riva/soc-cli/internal/version"
 
 	"github.com/spf13/cobra"
 )
@@ -24,7 +25,7 @@ func printSplash() {
 		`(\_/)  S O C - C L I  /══[>`,
 		`(o.O)════════════════/═══[>`,
 		`(> <)  Swiss Army Knife for`,
-		`        SOC Analysts  ` + Version,
+		`        SOC Analysts  ` + version.Version,
 	}
 	const pad = 2
 
