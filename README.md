@@ -1,7 +1,7 @@
 # soc-cli
 
 <p align="center">
-  <img src="assets/mascotte.jpg" alt="soc-cli mascot" width="200"/>
+  <img src="assets/mascotte.png" alt="soc-cli mascot" width="200"/>
 </p>
 
 `soc-cli` is a command-line tool for SOC analysts to aid in IP analysis, IOC extraction, URL scanning, and more.
